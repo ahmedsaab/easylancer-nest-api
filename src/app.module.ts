@@ -5,19 +5,13 @@ import { UsersController } from './users/users.controller';
 import { logger } from './common/middlewares/logger.middleware';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
-  imports: [TypeOrmModule.forRoot({
-    type: 'mongodb',
-    synchronize: true,
-    host: 'localhost',
-    port: 27017,
-    username: 'dbadmin',
-    password: 'easylancer88',
-    database: 'core-db',
-    entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  }), TasksModule, UsersModule],
+  imports: [
+    MongooseModule.forRoot('mongodb://dbadmin:easylancer88@localhost:27017/core-db'),
+    TasksModule, UsersModule,
+  ],
   providers: [
     {
       provide: APP_FILTER,
