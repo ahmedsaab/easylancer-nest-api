@@ -11,6 +11,10 @@ export class UsersService {
   ) {}
 
   async findAll(): Promise<User[]> {
+    const user = new User();
+    user.id = 123;
+    user.name = 'alex';
+    await this.userRepository.save(user);
     return await this.userRepository.find();
   }
 }

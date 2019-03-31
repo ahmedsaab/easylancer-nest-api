@@ -9,7 +9,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [TypeOrmModule.forRoot({
-    name: 'mongo-aws-cluster',
     type: 'mongodb',
     synchronize: true,
     host: 'localhost',
