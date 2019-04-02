@@ -1,15 +1,17 @@
 import * as mongoose from 'mongoose';
 
-export const UserTasksStatSchema = new mongoose.Schema({
-  created: {
+export const SettingSchema = new mongoose.Schema({
+  setting1: {
     type: Number,
     min: 0,
+    max: 5,
     validate : Number.isInteger,
     default: 0,
   },
-  finished: {
+  setting2: {
     type: Number,
     min: 0,
+    max: 5,
     validate : Number.isInteger,
     default: 0,
   },

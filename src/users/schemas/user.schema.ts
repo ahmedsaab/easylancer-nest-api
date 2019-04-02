@@ -1,14 +1,15 @@
 import * as mongoose from 'mongoose';
+import 'mongoose-type-email';
 import { BadgeSchema } from './badge.schema';
-import { UserTasksStatSchema } from './user-tasks-stat.schema';
+import { RatingSchema } from './rating.schema';
+import { SettingSchema } from './setting.schema';
 
 export const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
+  email: {
+    type: mongoose.SchemaTypes.Email,
     required: true,
     unique: true,
-    maxlength: 30,
-    match: /^[a-z0-9]+$/i,
+    maxlength: 50,
   },
   lastName: {
     type: String,
@@ -51,8 +52,12 @@ export const UserSchema = new mongoose.Schema({
     default: 'other',
   },
   badges: [BadgeSchema],
-  tasks: {
-    type: UserTasksStatSchema,
+  ratings: {
+    type: RatingSchema,
+    default: {},
+  },
+  settings: {
+    type: SettingSchema,
     default: {},
   },
 });

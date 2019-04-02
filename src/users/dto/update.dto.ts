@@ -1,25 +1,19 @@
 import {
   IsString,
-  IsInt,
   MaxLength,
-  ValidateNested,
   IsBoolean,
   IsOptional,
-  IsAlphanumeric,
   IsIn,
-  IsArray,
-  Min,
-  IsAlpha,
+  IsAlpha, IsEmail, ValidateNested,
 } from 'class-validator';
-import { UserTasksStatDto } from './user-tasks-stat.dto';
 import { Type } from 'class-transformer';
+import { UpdateSettingDto } from './settings/update.dto';
 
-export class UpdateUserDto {
-  @IsAlphanumeric()
+export class UpdateDto {
   @IsOptional()
-  @IsString()
-  @MaxLength(30)
-  readonly name: string;
+  @IsEmail()
+  @MaxLength(50)
+  readonly email: string;
 
   @IsOptional()
   @IsString()
@@ -38,16 +32,6 @@ export class UpdateUserDto {
   readonly imageUrl: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  readonly dislikes: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  readonly likes: number;
-
-  @IsOptional()
   @IsBoolean()
   readonly isApproved: number;
 
@@ -56,22 +40,15 @@ export class UpdateUserDto {
   readonly gender: number;
 
   @IsOptional()
-  @IsArray()
-  @MaxLength(20, {
-    each: true,
-  })
-  readonly badges: [];
-
-  // @ValidateNested({ each: true })
-  // @IsNonPrimitiveArray()
-  // @Type(() => PositionDto)
-  // positions: PositionDto[];
-
-  @IsOptional()
   @ValidateNested()
-  @Type(() => UserTasksStatDto)
-  readonly tasks: UserTasksStatDto;
+  @Type(() => UpdateSettingDto)
+  readonly settings: UpdateSettingDto;
 }
+
+// @ValidateNested({ each: true })
+// @IsNonPrimitiveArray()
+// @Type(() => PositionDto)
+// positions: PositionDto[];
 
 // import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 //

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export interface User extends mongoose.Document {
+export interface Task extends mongoose.Document {
   id: number;
   name: string;
   age: number;

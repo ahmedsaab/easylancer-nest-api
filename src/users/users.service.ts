@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateDto } from './dto/update.dto';
+import { CreateDto } from './dto/create.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './interfaces/user.interface';
@@ -15,16 +15,28 @@ export class UsersService {
     return await this.userModel.find().exec();
   }
 
-  async create(dto: CreateUserDto): Promise<User> {
+  async removeAll(): Promise<void> {
+    return await this.userModel.deleteMany({}).exec();
+  }
+
+  async get(id: string): Promise<User> {
+    return await this.userModel.findById(id).exec();
+  }
+
+  async remove(id: string): Promise<User> {
+    return await this.userModel.deleteOne({ _id: id }).exec();
+  }
+
+  async create(dto: CreateDto): Promise<User> {
     try {
-      const createdUser = new this.userModel(dto);
-      return await createdUser.save();
+      const user = new this.userModel(dto);
+      return await user.save();
     } catch (e) {
       throw new BadRequestException(e);
     }
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<User> {
+  async update(id: string, dto: UpdateDto): Promise<User> {
     const query = this.userModel.findOneAndUpdate({ _id: id }, dto, { new: true });
     return await query.exec();
   }
