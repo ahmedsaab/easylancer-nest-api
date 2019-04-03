@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import 'mongoose-type-email';
 import { BadgeSchema } from './badge.schema';
-import { RatingSchema } from './rating.schema';
+import { RatingSchema } from '../../common/schema/rating.schema';
 import { SettingSchema } from './setting.schema';
 
 export const UserSchema = new mongoose.Schema({

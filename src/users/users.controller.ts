@@ -14,6 +14,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // Only for development
   @Delete()
   async removeAll(): Promise<void> {
     return this.usersService.removeAll();

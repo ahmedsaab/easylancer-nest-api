@@ -13,6 +13,7 @@ export class TasksController {
     return this.tasksService.findAll();
   }
 
+  // Only for development
   @Delete()
   async removeAll(): Promise<void> {
     return this.tasksService.removeAll();

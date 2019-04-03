@@ -12,7 +12,10 @@ export class TasksService {
   ) {}
 
   async findAll(): Promise<Task[]> {
-    return await this.taskModel.find().exec();
+    return await this.taskModel.find().populate([{
+      path: 'creatorUser',
+      select: 'email firstName lastName likes dislikes imageUrl',
+    }]).exec();
   }
 
   async removeAll(): Promise<void> {
@@ -30,7 +33,11 @@ export class TasksService {
   async create(dto: CreateDto): Promise<Task> {
     try {
       const task = new this.taskModel(dto);
-      return await task.save();
+      await task.save();
+      return this.taskModel.populate(task, [{
+        path: 'creatorUser',
+        select: 'email firstName lastName likes dislikes imageUrl',
+      }]);
     } catch (e) {
       throw new BadRequestException(e);
     }
