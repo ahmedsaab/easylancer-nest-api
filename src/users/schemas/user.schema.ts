@@ -1,8 +1,8 @@
 import * as mongoose from 'mongoose';
 import 'mongoose-type-email';
 import { BadgeSchema } from './badge.schema';
-import { RatingSchema } from '../../common/schema/rating.schema';
 import { SettingSchema } from './setting.schema';
+import { UserRatingSchema } from './user-rating.schema';
 
 export const UserSchema = new mongoose.Schema({
   email: {
@@ -53,7 +53,7 @@ export const UserSchema = new mongoose.Schema({
   },
   badges: [BadgeSchema],
   ratings: {
-    type: RatingSchema,
+    type: UserRatingSchema,
     default: {},
   },
   settings: {

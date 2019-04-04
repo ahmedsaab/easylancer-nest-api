@@ -6,11 +6,12 @@ import { logger } from './common/middlewares/logger.middleware';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
+import { OffersModule } from './offers/offers.module';
 
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb://dbadmin:easylancer88@localhost:27017/core-db'),
-    TasksModule, UsersModule,
+    TasksModule, UsersModule, OffersModule,
   ],
   providers: [
     {

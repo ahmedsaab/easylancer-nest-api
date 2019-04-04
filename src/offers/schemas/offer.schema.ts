@@ -1,33 +1,19 @@
 import * as mongoose from 'mongoose';
 import { LocationSchema } from './location.schema';
-import { TaskRatingSchema } from './task-rating.schema';
-import { BadRequestException } from '@nestjs/common';
 
 const { ObjectId } = mongoose.Schema.Types;
 
 export const TASK_TYPES = ['type1', 'type2', 'type3', 'type4'];
-export const TASK_STATUSES = ['active', 'in-progress', 'done', 'canceled'];
-export const TASK_CATEGORIES = ['category1', 'category2', 'category3', 'category4'];
+export const TASK_CATEGORIES = ['active', 'in-progress', 'done', 'canceled'];
+export const TASK_STATUSES = ['category1', 'category2', 'category3', 'category4'];
 export const TASK_PAYMENTS = ['card', 'cash'];
 
-export const TaskSchema = new mongoose.Schema({
+export const OfferSchema = new mongoose.Schema({
   creatorUser: {
     type: ObjectId,
     ref: 'User',
     unique: false,
     required: true,
-  },
-  workerUser: {
-    type: ObjectId,
-    ref: 'User',
-    index: {
-      unique: true,
-      partialFilterExpression: {
-        workerUser: {
-          $type: 'string',
-        },
-      },
-    },
   },
   acceptedOffer: {
     type: ObjectId,
@@ -54,11 +40,6 @@ export const TaskSchema = new mongoose.Schema({
     required: true,
     maxlength: 40,
   },
-  description: {
-    type: String,
-    required: true,
-    maxlength: 400,
-  },
   seenCount: {
     type: Number,
     required: true,
@@ -84,14 +65,6 @@ export const TaskSchema = new mongoose.Schema({
     set: (val) => this.createdAt ?
       this.createdAt : val,
   },
-  creatorRating: {
-    type: TaskRatingSchema,
-    default: null,
-  },
-  workerRating: {
-    type: TaskRatingSchema,
-    default: null,
-  },
   status: {
     type: String,
     enum: TASK_STATUSES,
@@ -115,11 +88,9 @@ export const TaskSchema = new mongoose.Schema({
   imagesUrls: [String],
 });
 
-TaskSchema.pre('validate', function(next) {
+OfferSchema.pre('validate', function(next) {
   if (this.startDateTime >= this.endDateTime) {
-    next(new BadRequestException('End Date must be greater than Start Date'));
-  } else if (this.creatorUser.equals(this.workerUser)) {
-    next(new BadRequestException('Creator user cannot equal Worker user'));
+    next(new Error('End Date must be greater than Start Date'));
   } else {
     next();
   }

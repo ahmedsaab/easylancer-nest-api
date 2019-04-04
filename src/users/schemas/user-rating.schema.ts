@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export const RatingSchema = new mongoose.Schema({
+export const UserRatingSchema = new mongoose.Schema({
   measure1: {
     type: Number,
     min: 0,
