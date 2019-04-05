@@ -2,13 +2,9 @@ import * as mongoose from 'mongoose';
 import { LocationSchema } from './location.schema';
 import { TaskRatingSchema } from './task-rating.schema';
 import { BadRequestException } from '@nestjs/common';
+import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_STATUSES, TASK_TYPES } from '../../common/schema/constants';
 
 const { ObjectId } = mongoose.Schema.Types;
-
-export const TASK_TYPES = ['type1', 'type2', 'type3', 'type4'];
-export const TASK_STATUSES = ['active', 'in-progress', 'done', 'canceled'];
-export const TASK_CATEGORIES = ['category1', 'category2', 'category3', 'category4'];
-export const TASK_PAYMENTS = ['card', 'cash'];
 
 export const TaskSchema = new mongoose.Schema({
   creatorUser: {
@@ -88,23 +84,23 @@ export const TaskSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: TASK_STATUSES,
-    default: TASK_STATUSES[0],
+    enum: TASK_STATUSES.VALUES,
+    default: TASK_STATUSES.DEFAULT,
   },
   type: {
     type: String,
-    enum: TASK_TYPES,
+    enum: TASK_TYPES.VALUES,
     required: true,
   },
   category: {
     type: String,
-    enum: TASK_CATEGORIES,
+    enum: TASK_CATEGORIES.VALUES,
     required: true,
   },
   paymentMethod: {
     type: String,
-    enum: TASK_PAYMENTS,
-    default: TASK_PAYMENTS[0],
+    enum: PAYMENT_METHODS.VALUES,
+    default: PAYMENT_METHODS.DEFAULT,
   },
   imagesUrls: [String],
 });

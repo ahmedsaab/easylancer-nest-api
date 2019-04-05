@@ -1,10 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { UpdateDto } from './dto/update.dto';
 import { CreateDto } from './dto/create.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Task } from './interfaces/task.interface';
 import { UsersService } from '../users/users.service';
+import { Offer } from '../offers/interfaces/offer.interface';
+import { OffersService } from '../offers/offers.service';
 
 const UPDATE_OPTIONS = { new: true, runValidators: true };
 const DEF_PROP = [{
@@ -20,6 +22,8 @@ export class TasksService {
   constructor(
     @InjectModel('Task') private readonly taskModel: Model<Task>,
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => OffersService))
+    private readonly offersService: OffersService,
   ) {}
 
   async findAll(): Promise<Task[]> {
@@ -49,6 +53,13 @@ export class TasksService {
       .execPopulate();
   }
 
+  async exists(id: string): Promise<void> {
+    const exists = (await this.taskModel.count({_id: id})) > 0;
+    if (!exists) {
+      throw new NotFoundException(`Task ${id} doesn't exist`);
+    }
+  }
+
   async update(id: string, dto: any): Promise<Task> {
     if (dto.workerUser) {
        await this.usersService.exists(dto.workerUser);
@@ -59,5 +70,13 @@ export class TasksService {
     await task.save(dto);
     return task.populate(DEF_PROP)
       .execPopulate();
+  }
+
+  async getOffers(id: string): Promise<Offer[]> {
+    return this.offersService.getByTask(id);
+  }
+
+  async removeOffers(id: string): Promise<any> {
+    return this.offersService.removeByTask(id);
   }
 }

@@ -3,9 +3,13 @@ import { CreateDto } from './dto/create.dto';
 import { UpdateDto } from './dto/update.dto';
 import { TasksService } from './tasks.service';
 import { Task } from './interfaces/task.interface';
+import { Offer } from '../offers/interfaces/offer.interface';
+
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(
+    private readonly tasksService: TasksService,
+  ) {}
 
   // Only for development
   @Get()
@@ -46,5 +50,19 @@ export class TasksController {
     @Param('id') id: string,
   ): Promise<Task> {
     return this.tasksService.remove(id);
+  }
+
+  @Get(':id/offers')
+  async getOffers(
+    @Param('id') id: string,
+  ): Promise<Offer[]> {
+    return this.tasksService.getOffers(id);
+  }
+
+  @Delete(':id/offers')
+  async removeOffers(
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.tasksService.removeOffers(id);
   }
 }
