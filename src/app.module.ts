@@ -7,10 +7,13 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OffersModule } from './offers/offers.module';
+import { MongoService } from './common/providers/mongoose.service';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://dbadmin:easylancer88@localhost:27017/core-db'),
+    MongooseModule.forRootAsync({
+      useClass: MongoService,
+    }),
     TasksModule, UsersModule, OffersModule,
   ],
   providers: [

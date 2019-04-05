@@ -38,16 +38,12 @@ export class OffersService {
   }
 
   async create(dto: any): Promise<Offer> {
-    const userExists = await this.usersService.exists(dto.creatorUser);
+    await this.usersService.exists(dto.creatorUser);
     const offer = new this.offerModel(dto);
 
-    if (userExists) {
-      await offer.save();
-      return offer.populate(DEF_PROP)
-        .execPopulate();
-    } else {
-      throw new NotFoundException(`User ${dto.creatorUser} doesn't exist`);
-    }
+    await offer.save();
+    return offer.populate(DEF_PROP)
+      .execPopulate();
   }
 
   async update(id: string, dto: UpdateDto): Promise<Offer> {

@@ -20,14 +20,8 @@ export const TaskSchema = new mongoose.Schema({
   workerUser: {
     type: ObjectId,
     ref: 'User',
-    index: {
-      unique: true,
-      partialFilterExpression: {
-        workerUser: {
-          $type: 'string',
-        },
-      },
-    },
+    unique: false,
+    default: null,
   },
   acceptedOffer: {
     type: ObjectId,
