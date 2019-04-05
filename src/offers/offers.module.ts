@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { OffersController } from './offers.controller';
 import { OffersService } from './offers.service';
 import { OfferSchema } from './schemas/offer.schema';
@@ -12,7 +12,7 @@ import { TasksModule } from '../tasks/tasks.module';
       { name: 'Offer', schema: OfferSchema },
     ]),
     UsersModule,
-    TasksModule,
+    forwardRef(() => TasksModule),
   ],
   controllers: [OffersController],
   providers: [OffersService],

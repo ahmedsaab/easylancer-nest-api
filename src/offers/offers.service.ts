@@ -15,10 +15,11 @@ const DEF_PROP = [{
 @Injectable()
 export class OffersService {
   constructor(
-    @InjectModel('Offer') private readonly offerModel: Model<Offer>,
-    private readonly usersService: UsersService,
+    @InjectModel('Offer')
+    private readonly offerModel: Model<Offer>,
     @Inject(forwardRef(() => TasksService))
     private readonly tasksService: TasksService,
+    private readonly usersService: UsersService,
   ) {
   }
 

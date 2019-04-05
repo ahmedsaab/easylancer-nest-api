@@ -20,10 +20,11 @@ const DEF_PROP = [{
 @Injectable()
 export class TasksService {
   constructor(
-    @InjectModel('Task') private readonly taskModel: Model<Task>,
-    private readonly usersService: UsersService,
+    @InjectModel('Task')
+    private readonly taskModel: Model<Task>,
     @Inject(forwardRef(() => OffersService))
     private readonly offersService: OffersService,
+    private readonly usersService: UsersService,
   ) {}
 
   async findAll(): Promise<Task[]> {
