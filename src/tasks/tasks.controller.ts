@@ -34,7 +34,7 @@ export class TasksController {
   async findOne(
     @Param('id') id: string,
   ): Promise<Task> {
-    return this.tasksService.get(id);
+    return this.tasksService.getPopulate(id);
   }
 
   @Put(':id')

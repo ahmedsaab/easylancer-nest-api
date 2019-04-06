@@ -36,13 +36,17 @@ export class TasksService {
     return this.taskModel.deleteMany({});
   }
 
-  async get(id: string): Promise<Task> {
+  async getPopulate(id: string): Promise<Task> {
     return this.taskModel.findById(id)
       .populate(DEF_PROP);
   }
 
+  async get(id: string): Promise<any> {
+    return this.taskModel.findById(id);
+  }
+
   async remove(id: string): Promise<Task> {
-    return await this.taskModel.deleteOne({ _id: id });
+    return this.taskModel.deleteOne({ _id: id });
   }
 
   async create(dto: any): Promise<Task> {

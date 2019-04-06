@@ -4,7 +4,7 @@ import { PAYMENT_METHODS } from '../../common/schema/constants';
 const { ObjectId } = mongoose.Schema.Types;
 
 export const OfferSchema = new mongoose.Schema({
-  creatorUser: {
+  workerUser: {
     type: ObjectId,
     ref: 'User',
     unique: false,

@@ -1,4 +1,4 @@
-import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, HttpException, Inject, Injectable, MethodNotAllowedException, NotFoundException } from '@nestjs/common';
 import { UpdateDto } from './dto/update.dto';
 import { CreateDto } from './dto/create.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -42,8 +42,16 @@ export class OffersService {
   }
 
   async create(dto: any): Promise<Offer> {
-    await this.usersService.exists(dto.workerUser);
-    await this.tasksService.exists(dto.task);
+    const [ task ] = await Promise.all([
+      this.tasksService.get(dto.task),
+      this.usersService.exists(dto.workerUser),
+    ]);
+
+    if (task.creatorUser.toString() === dto.workerUser) {
+      throw new MethodNotAllowedException(
+        'Users cannot make an offer to their own tasks',
+      );
+    }
     const offer = new this.offerModel(dto);
 
     await offer.save();
