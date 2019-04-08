@@ -9,8 +9,8 @@ export const TASK_TYPES = {
 };
 
 export const TASK_STATUSES = {
-  VALUES: ['active', 'in-progress', 'done', 'canceled'],
-  DEFAULT: 'active',
+  VALUES: ['open', 'accepted', 'in-progress', 'done', 'not-done', 'closed', 'removed'],
+  DEFAULT: 'open',
 };
 
 export const TASK_CATEGORIES = {

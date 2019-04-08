@@ -28,7 +28,7 @@ export class OffersService {
       .populate(DEF_PROP);
   }
 
-  async removeAll(): Promise<void> {
+  async removeAll(): Promise<any> {
     return this.offerModel.deleteMany({});
   }
 
@@ -37,17 +37,20 @@ export class OffersService {
       .populate(DEF_PROP);
   }
 
-  async remove(id: string): Promise<Offer> {
+  async remove(id: string): Promise<any> {
     return await this.offerModel.deleteOne({ _id: id });
   }
 
   async create(dto: any): Promise<Offer> {
+    const userId = dto.workerUser;
+    const taskId = dto.task;
+
     const [ task ] = await Promise.all([
-      this.tasksService.get(dto.task),
-      this.usersService.exists(dto.workerUser),
+      this.tasksService.get(taskId),
+      this.usersService.exists(userId),
     ]);
 
-    if (task.creatorUser.toString() === dto.workerUser) {
+    if (task.creatorUser.toString() === userId) {
       throw new MethodNotAllowedException(
         'Users cannot make an offer to their own tasks',
       );
@@ -55,11 +58,15 @@ export class OffersService {
     const offer = new this.offerModel(dto);
 
     await offer.save();
+    this.usersService.applyToTask(userId, taskId).catch((error) => {
+      console.error(error);
+    });
+
     return offer;
   }
 
-  async getByTask(taskId) {
-    return this.offerModel.find({ task: taskId })
+  async findByTask(taskId, query?: Partial<Offer>) {
+    return this.offerModel.find({ task: taskId, ...query })
       .populate(DEF_PROP);
   }
 

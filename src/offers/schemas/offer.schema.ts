@@ -39,11 +39,3 @@ export const OfferSchema = new mongoose.Schema({
     required: false,
   },
 });
-
-OfferSchema.pre('validate', function(next) {
-  if (this.startDateTime >= this.endDateTime) {
-    next(new Error('End Date must be greater than Start Date'));
-  } else {
-    next();
-  }
-});

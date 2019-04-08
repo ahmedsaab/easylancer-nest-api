@@ -3,6 +3,7 @@ import { LocationSchema } from './location.schema';
 import { TaskRatingSchema } from './task-rating.schema';
 import { BadRequestException } from '@nestjs/common';
 import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_STATUSES, TASK_TYPES } from '../../common/schema/constants';
+import { Task } from '../interfaces/task.interface';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -105,7 +106,7 @@ export const TaskSchema = new mongoose.Schema({
   imagesUrls: [String],
 });
 
-TaskSchema.pre('validate', function(next) {
+TaskSchema.pre<Task>('validate', function(next) {
   if (this.startDateTime >= this.endDateTime) {
     next(new BadRequestException('End Date must be greater than Start Date'));
   } else if (this.creatorUser.equals(this.workerUser)) {

@@ -1,15 +1,32 @@
 import * as mongoose from 'mongoose';
-import 'mongoose-type-email';
 import { BadgeSchema } from './badge.schema';
 import { SettingSchema } from './setting.schema';
 import { UserRatingSchema } from './user-rating.schema';
 
+const { ObjectId } = mongoose.Schema.Types;
+
 export const UserSchema = new mongoose.Schema({
   email: {
-    type: mongoose.SchemaTypes.Email,
+    type: String,
     required: true,
     unique: true,
+    match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
     maxlength: 50,
+  },
+  createdTasks: {
+    type: [ObjectId],
+    ref: 'Task',
+    default: [],
+  },
+  acceptedTasks: {
+    type: [ObjectId],
+    ref: 'Task',
+    default: [],
+  },
+  appliedTasks: {
+    type: [ObjectId],
+    ref: 'Task',
+    default: [],
   },
   lastName: {
     type: String,

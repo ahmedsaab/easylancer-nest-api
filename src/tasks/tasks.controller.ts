@@ -1,15 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { CreateDto } from './dto/create.dto';
 import { UpdateDto } from './dto/update.dto';
 import { TasksService } from './tasks.service';
 import { Task } from './interfaces/task.interface';
 import { Offer } from '../offers/interfaces/offer.interface';
+import { Types } from 'mongoose';
 
 @Controller('tasks')
 export class TasksController {
-  constructor(
-    private readonly tasksService: TasksService,
-  ) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   // Only for development
   @Get()
@@ -55,8 +54,11 @@ export class TasksController {
   @Get(':id/offers')
   async getOffers(
     @Param('id') id: string,
+    @Query('userId') userId?: string,
   ): Promise<Offer[]> {
-    return this.tasksService.getOffers(id);
+    return this.tasksService.getOffers(id, {
+      workerUser: Types.ObjectId(userId),
+    });
   }
 
   @Delete(':id/offers')

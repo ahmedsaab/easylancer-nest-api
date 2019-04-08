@@ -1,8 +1,25 @@
-import * as mongoose from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { Badge } from './bade.interface';
+import { UserRating } from './user-rating.interface';
+import { Setting } from './setting.interface';
 
-export interface User extends mongoose.Document {
-  id: number;
+export interface User extends Document {
   name: string;
   age: number;
   breed: string;
+  email: string;
+  createdTasks: Types.ObjectId[];
+  acceptedTasks: Types.ObjectId[];
+  appliedTasks: Types.ObjectId[];
+  lastName: string;
+  firstName: string;
+  imageUrl: string;
+  dislikes: number;
+  likes: number;
+  isApproved: boolean;
+  createdAt: Date;
+  gender: string;
+  badges: Badge[];
+  ratings: UserRating;
+  settings: Setting;
 }

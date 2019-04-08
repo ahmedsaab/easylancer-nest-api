@@ -7,15 +7,37 @@ import { Task } from './interfaces/task.interface';
 import { UsersService } from '../users/users.service';
 import { Offer } from '../offers/interfaces/offer.interface';
 import { OffersService } from '../offers/offers.service';
+import * as mongoose from 'mongoose';
+
+const propsToArray = (fields) => {
+  return Object.keys(fields).map((fieldName) => {
+    const fieldProps = fields[fieldName];
+    return {
+      path: fieldName,
+      select: fieldProps,
+    };
+  });
+};
+
+const refsToProps = (refs: string[]) => {
+  const props = [];
+  refs.forEach((ref) => {
+    if (POPULATION_PORPS.hasOwnProperty(ref)) {
+      props.push({
+        path: ref,
+        select: POPULATION_PORPS[ref],
+      });
+    }
+  });
+  return props;
+};
 
 const UPDATE_OPTIONS = { new: true, runValidators: true };
-const DEF_PROP = [{
-  path: 'creatorUser',
-  select: 'firstName lastName likes dislikes imageUrl badges isApproved',
-}, {
-  path: 'workerUser',
-  select: 'firstName lastName likes dislikes imageUrl badges isApproved',
-}];
+const POPULATION_PORPS = {
+  creatorUser: 'firstName lastName likes dislikes imageUrl badges isApproved',
+  workerUser: 'firstName lastName likes dislikes imageUrl badges isApproved',
+};
+const DEF_PROP = propsToArray(POPULATION_PORPS);
 
 @Injectable()
 export class TasksService {
@@ -24,6 +46,7 @@ export class TasksService {
     private readonly taskModel: Model<Task>,
     @Inject(forwardRef(() => OffersService))
     private readonly offersService: OffersService,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {}
 
@@ -32,7 +55,7 @@ export class TasksService {
       .populate(DEF_PROP);
   }
 
-  async removeAll(): Promise<void> {
+  async removeAll(): Promise<any> {
     return this.taskModel.deleteMany({});
   }
 
@@ -41,11 +64,11 @@ export class TasksService {
       .populate(DEF_PROP);
   }
 
-  async get(id: string): Promise<any> {
+  async get(id: string): Promise<Task> {
     return this.taskModel.findById(id);
   }
 
-  async remove(id: string): Promise<Task> {
+  async remove(id: string): Promise<any> {
     return this.taskModel.deleteOne({ _id: id });
   }
 
@@ -54,6 +77,10 @@ export class TasksService {
     const task = new this.taskModel(dto);
 
     await task.save();
+    this.usersService.createTask(dto.creatorUser, task._id).catch((error) => {
+      console.error(error);
+    });
+
     return task.populate(DEF_PROP)
       .execPopulate();
   }
@@ -62,6 +89,20 @@ export class TasksService {
     const exists = (await this.taskModel.count({_id: id})) > 0;
     if (!exists) {
       throw new NotFoundException(`Task ${id} doesn't exist`);
+    }
+  }
+
+  async findByIds(ids): Promise<Task[]> {
+    const objectIds = ids.map(id => new mongoose.Types.ObjectId(id));
+
+    return this.taskModel.find({ _id: { $in: objectIds } });
+  }
+
+  async find(query, refs?: string[]): Promise<Task[]> {
+    if (refs) {
+      return this.taskModel.find(query).populate(refsToProps(refs));
+    } else {
+      return this.taskModel.find(query);
     }
   }
 
@@ -77,8 +118,8 @@ export class TasksService {
       .execPopulate();
   }
 
-  async getOffers(id: string): Promise<Offer[]> {
-    return this.offersService.getByTask(id);
+  async getOffers(id: string, query?: Partial<Offer>): Promise<Offer[]> {
+    return this.offersService.findByTask(id, query);
   }
 
   async removeOffers(id: string): Promise<any> {
