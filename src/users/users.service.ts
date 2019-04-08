@@ -37,33 +37,39 @@ export class UsersService {
   async create(dto: CreateDto): Promise<User> {
     try {
       const user = new this.userModel(dto);
-      return await user.save();
+      return user.save();
     } catch (e) {
       throw new BadRequestException(e);
     }
   }
 
-  async applyToTask(id, taskId): Promise<User> {
-    return this.userModel.findOneAndUpdate({ _id: id }, {
-      $push: {
+  applyToTask(id, taskId): void {
+    this.userModel.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
         appliedTasks: taskId,
       },
+    }).catch((error) => {
+      console.error(error);
     });
   }
 
-  async createTask(id, taskId): Promise<User> {
-    return this.userModel.findOneAndUpdate({ _id: id }, {
-      $push: {
+  createTask(id, taskId): void {
+    this.userModel.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
         createdTasks: taskId,
       },
+    }).catch((error) => {
+      console.error(error);
     });
   }
 
-  async finishTask(id, taskId): Promise<User> {
-    return this.userModel.findOneAndUpdate({ _id: id }, {
-      $push: {
-        finishedTasks: taskId,
+  assignTask(id, taskId): void {
+    this.userModel.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
+        acceptedTasks: taskId,
       },
+    }).catch((error) => {
+      console.error(error);
     });
   }
 

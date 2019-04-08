@@ -39,3 +39,10 @@ export const OfferSchema = new mongoose.Schema({
     required: false,
   },
 });
+
+OfferSchema.index({
+  workerUser: 1,
+  task: 1,
+}, {
+  unique: true,
+});

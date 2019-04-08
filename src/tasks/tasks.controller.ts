@@ -56,9 +56,11 @@ export class TasksController {
     @Param('id') id: string,
     @Query('userId') userId?: string,
   ): Promise<Offer[]> {
-    return this.tasksService.getOffers(id, {
+    const query = userId ? {
       workerUser: Types.ObjectId(userId),
-    });
+    } : undefined;
+
+    return this.tasksService.getOffers(id, query);
   }
 
   @Delete(':id/offers')
@@ -66,5 +68,13 @@ export class TasksController {
     @Param('id') id: string,
   ): Promise<void> {
     return this.tasksService.removeOffers(id);
+  }
+
+  @Put(':id/accepted-offer')
+  async updateAcceptedOffer(
+    @Param('id') id: string,
+    @Body() dto: any,
+  ): Promise<Task> {
+    return this.tasksService.acceptOffer(id, dto.acceptedOffer);
   }
 }

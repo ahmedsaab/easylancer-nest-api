@@ -1,13 +1,12 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef, MethodNotAllowedException } from '@nestjs/common';
 import { UpdateDto } from './dto/update.dto';
 import { CreateDto } from './dto/create.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Task } from './interfaces/task.interface';
 import { UsersService } from '../users/users.service';
 import { Offer } from '../offers/interfaces/offer.interface';
 import { OffersService } from '../offers/offers.service';
-import * as mongoose from 'mongoose';
 
 const propsToArray = (fields) => {
   return Object.keys(fields).map((fieldName) => {
@@ -77,12 +76,9 @@ export class TasksService {
     const task = new this.taskModel(dto);
 
     await task.save();
-    this.usersService.createTask(dto.creatorUser, task._id).catch((error) => {
-      console.error(error);
-    });
+    this.usersService.createTask(dto.creatorUser, task._id);
 
-    return task.populate(DEF_PROP)
-      .execPopulate();
+    return task;
   }
 
   async exists(id: string): Promise<void> {
@@ -93,7 +89,7 @@ export class TasksService {
   }
 
   async findByIds(ids): Promise<Task[]> {
-    const objectIds = ids.map(id => new mongoose.Types.ObjectId(id));
+    const objectIds = ids.map(id => new Types.ObjectId(id));
 
     return this.taskModel.find({ _id: { $in: objectIds } });
   }
@@ -114,8 +110,7 @@ export class TasksService {
 
     task.set(dto);
     await task.save(dto);
-    return task.populate(DEF_PROP)
-      .execPopulate();
+    return task;
   }
 
   async getOffers(id: string, query?: Partial<Offer>): Promise<Offer[]> {
@@ -124,5 +119,29 @@ export class TasksService {
 
   async removeOffers(id: string): Promise<any> {
     return this.offersService.removeByTask(id);
+  }
+
+  async acceptOffer(id: string, offerId: string): Promise<Task> {
+    const [ task, offers ] = await Promise.all([
+      this.get(id),
+      this.offersService.find({
+        task: Types.ObjectId(id),
+        _id: offerId,
+      }),
+    ]);
+
+    if (task.acceptedOffer !== null) {
+      throw new MethodNotAllowedException('Task already has an accepted offer');
+    } else if (offers.length === 0) {
+      throw new BadRequestException('Offer doesn\'t exists');
+    } else {
+      const offer = offers[0];
+
+      task.acceptedOffer = new Types.ObjectId(offerId);
+      await task.save();
+      this.usersService.assignTask(offer.workerUser, task.id);
+
+      return task;
+    }
   }
 }

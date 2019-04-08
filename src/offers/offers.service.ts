@@ -58,16 +58,18 @@ export class OffersService {
     const offer = new this.offerModel(dto);
 
     await offer.save();
-    this.usersService.applyToTask(userId, taskId).catch((error) => {
-      console.error(error);
-    });
+    this.usersService.applyToTask(userId, taskId);
 
     return offer;
   }
 
-  async findByTask(taskId, query?: Partial<Offer>) {
+  async findByTask(taskId, query?: Partial<Offer>): Promise<Offer[]> {
     return this.offerModel.find({ task: taskId, ...query })
       .populate(DEF_PROP);
+  }
+
+  async find(query?: Partial<Offer>): Promise<Offer[]> {
+    return this.offerModel.find(query);
   }
 
   async removeByTask(taskId) {
