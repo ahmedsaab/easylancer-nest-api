@@ -11,7 +11,7 @@ export interface Task extends Document {
   price: number;
   title: string;
   description: string;
-  seenCount: number;
+  seenBy: [Types.ObjectId];
   location: Location;
   createdAt: Date;
   creatorRating: TaskRating;

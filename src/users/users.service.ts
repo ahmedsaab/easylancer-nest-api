@@ -8,6 +8,8 @@ import { Task } from '../tasks/interfaces/task.interface';
 import { TasksService } from '../tasks/tasks.service';
 import { TaskRating } from '../tasks/interfaces/task-rating.interface';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
+import { CreateBadgeDto } from './dto/badges/create.dto';
+import { Badge } from './interfaces/bade.interface';
 
 @Injectable()
 export class UsersService {
@@ -65,6 +67,9 @@ export class UsersService {
 
   assignTask(id, taskId): void {
     this.userModel.findOneAndUpdate({ _id: id }, {
+      $pull: {
+        appliedTasks: taskId,
+      },
       $addToSet: {
         acceptedTasks: taskId,
       },
@@ -83,6 +88,61 @@ export class UsersService {
     return this.tasksService.find({
       creatorUser: id,
     });
+  }
+
+  async setLastSeen(id: string, dateTime?: Date): Promise<Partial<User>> {
+    const doc = {
+      lastSeen: (dateTime || new Date()).toUTCString(),
+    };
+    const resp = await this.userModel.updateOne({
+      _id: id,
+    }, doc);
+
+    if (resp.nModified !== 1) {
+      throw new NotFoundException(`No user found with id ${id}`);
+    }
+    return doc;
+  }
+
+  async setApproved(id: string, flag: boolean): Promise<Partial<User>> {
+    const doc = {
+      isApproved: !!flag,
+    };
+    const resp = await this.userModel.updateOne({
+      _id: id,
+    }, doc);
+
+    if (resp.nModified !== 1) {
+      throw new NotFoundException(`No user found with id ${id}`);
+    }
+    return doc;
+  }
+
+  async addBadge(id: string, badge: CreateBadgeDto): Promise<Badge[]> {
+    const user = await this.userModel.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
+        badges: badge,
+      },
+    }, { new: true });
+
+    return user.badges;
+  }
+
+  async removeBadge(id: string, badgeName: string): Promise<Badge> {
+    const resp = await this.userModel.updateOne({
+      _id: id,
+    }, {
+      $pull: {
+        badges: { name: badgeName },
+      },
+    });
+
+    if (resp.nModified !== 1) {
+      throw new NotFoundException(`No user found with id ${id}`);
+    }
+    return {
+      name: badgeName,
+    };
   }
 
   async getRelatedTasks(id): Promise<Task[]> {
@@ -112,7 +172,6 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateDto): Promise<User> {
-    const query = this.userModel.findOneAndUpdate({ _id: id }, dto, { new: true });
-    return await query.exec();
+    return this.userModel.findOneAndUpdate({ _id: id }, dto, { new: true });
   }
 }

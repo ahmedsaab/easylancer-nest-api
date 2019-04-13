@@ -1,7 +1,6 @@
 import {
   IsString,
   MaxLength,
-  IsBoolean,
   IsOptional,
   IsIn,
   IsAlpha, IsEmail, ValidateNested,
@@ -30,10 +29,6 @@ export class UpdateDto {
   @IsOptional()
   @IsString()
   readonly imageUrl: string;
-
-  @IsOptional()
-  @IsBoolean()
-  readonly isApproved: number;
 
   @IsOptional()
   @IsIn(['male', 'female', 'other'])

@@ -1,0 +1,10 @@
+v Logging (includes execution time)
+v Proper response JSON
+v Proper error response JSON
+v Request timeouts
+v Ordering Json responses
+- Splunk batch logs (counter middleware)
+- Swagger documentation
+x Pagination
+
+

@@ -33,6 +33,10 @@ export const UserSchema = new mongoose.Schema({
     default: null,
     maxlength: 30,
   },
+  lastSeen: {
+    type: Date,
+    default: Date.now,
+  },
   firstName: {
     type: String,
     default: null,
@@ -77,4 +81,4 @@ export const UserSchema = new mongoose.Schema({
     type: SettingSchema,
     default: {},
   },
-});
+}, { versionKey: false });

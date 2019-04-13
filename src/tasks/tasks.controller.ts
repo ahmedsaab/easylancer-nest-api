@@ -77,4 +77,20 @@ export class TasksController {
   ): Promise<Task> {
     return this.tasksService.acceptOffer(id, dto.acceptedOffer);
   }
+
+  @Put(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: any,
+  ): Promise<Partial<Task>> {
+    return this.tasksService.changeStatus(id, dto.status);
+  }
+
+  @Get(':id/seenBy/:userId')
+  async seenByUser(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ): Promise<Partial<Task>> {
+    return this.tasksService.seenByUser(id, userId);
+  }
 }

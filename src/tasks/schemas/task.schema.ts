@@ -50,12 +50,9 @@ export const TaskSchema = new mongoose.Schema({
     required: true,
     maxlength: 400,
   },
-  seenCount: {
-    type: Number,
-    required: true,
-    validate: Number.isInteger,
-    min: 0,
-    default: 0,
+  seenBy: {
+    type: [ObjectId],
+    default: [],
   },
   location: {
     type: LocationSchema,
@@ -104,7 +101,7 @@ export const TaskSchema = new mongoose.Schema({
     default: PAYMENT_METHODS.DEFAULT,
   },
   imagesUrls: [String],
-});
+}, { versionKey: false });
 
 TaskSchema.pre<Task>('validate', function(next) {
   if (this.startDateTime >= this.endDateTime) {

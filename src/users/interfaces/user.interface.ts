@@ -12,6 +12,7 @@ export interface User extends Document {
   acceptedTasks: Types.ObjectId[];
   appliedTasks: Types.ObjectId[];
   lastName: string;
+  lastSeen: string;
   firstName: string;
   imageUrl: string;
   dislikes: number;

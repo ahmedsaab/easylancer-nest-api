@@ -3,11 +3,6 @@ import * as mongoose from 'mongoose';
 export const BadgeSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    maxlength: 30,
-  },
-  icon: {
-    type: String,
-    required: true,
+    enum: ['badge1', 'badge2', 'badge3'],
   },
 }, { _id : false });

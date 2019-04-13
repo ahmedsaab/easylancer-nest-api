@@ -8,16 +8,6 @@ import { UsersService } from '../users/users.service';
 import { Offer } from '../offers/interfaces/offer.interface';
 import { OffersService } from '../offers/offers.service';
 
-const propsToArray = (fields) => {
-  return Object.keys(fields).map((fieldName) => {
-    const fieldProps = fields[fieldName];
-    return {
-      path: fieldName,
-      select: fieldProps,
-    };
-  });
-};
-
 const refsToProps = (refs: string[]) => {
   const props = [];
   refs.forEach((ref) => {
@@ -36,7 +26,7 @@ const POPULATION_PORPS = {
   creatorUser: 'firstName lastName likes dislikes imageUrl badges isApproved',
   workerUser: 'firstName lastName likes dislikes imageUrl badges isApproved',
 };
-const DEF_PROP = propsToArray(POPULATION_PORPS);
+const DEF_PROP = refsToProps(Object.keys(POPULATION_PORPS));
 
 @Injectable()
 export class TasksService {
@@ -133,7 +123,7 @@ export class TasksService {
     if (task.acceptedOffer !== null) {
       throw new MethodNotAllowedException('Task already has an accepted offer');
     } else if (offers.length === 0) {
-      throw new BadRequestException('Offer doesn\'t exists');
+      throw new BadRequestException('Offer doesn\'t exists on this task');
     } else {
       const offer = offers[0];
 
@@ -143,5 +133,27 @@ export class TasksService {
 
       return task;
     }
+  }
+
+  async changeStatus(id: string, status: string): Promise<Partial<Task>> {
+    const doc = { status };
+    const resp = await this.taskModel.updateOne({
+      _id: id,
+    }, doc);
+
+    if (resp.nModified !== 1) {
+      throw new NotFoundException(`No task found with id ${id}`);
+    }
+    return doc;
+  }
+
+  async seenByUser(id: string, userId: string): Promise<Partial<Task>> {
+    const user = await this.taskModel.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
+        seenBy: userId,
+      },
+    }, { new: true });
+
+    return user.seenBy;
   }
 }

@@ -38,7 +38,7 @@ export const OfferSchema = new mongoose.Schema({
     type: Boolean,
     required: false,
   },
-});
+}, { versionKey: false });
 
 OfferSchema.index({
   workerUser: 1,
