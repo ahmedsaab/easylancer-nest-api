@@ -14,9 +14,26 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
     return next.handle().pipe(map(data => {
       return {
         version: pJson.version,
-        data: sort(Array.isArray(data) ?
-          data.map((e) => e.toJSON()) : data.toJSON()),
+        data: sortPayload(data),
       };
     }));
   }
 }
+
+const sortPayload = (data: any): any => {
+  function present(obj) {
+    if (obj.hasOwnProperty('toJSON')) {
+      return obj.toJSON();
+    } else {
+      return obj;
+    }
+  }
+  let pojo = {};
+
+  if (Array.isArray(data)) {
+    pojo = data.map((e) => present(e));
+  } else {
+    pojo = present(data);
+  }
+  return sort(pojo);
+};

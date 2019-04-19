@@ -1,6 +1,4 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef, MethodNotAllowedException } from '@nestjs/common';
-import { UpdateDto } from './dto/update.dto';
-import { CreateDto } from './dto/create.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Task } from './interfaces/task.interface';
@@ -49,8 +47,13 @@ export class TasksService {
   }
 
   async getPopulate(id: string): Promise<Task> {
-    return this.taskModel.findById(id)
+    const task = await this.taskModel.findById(id)
       .populate(DEF_PROP);
+
+    if (!task) {
+      throw new NotFoundException(`task with id ${id} not found`);
+    }
+    return task;
   }
 
   async get(id: string): Promise<Task> {
@@ -136,6 +139,7 @@ export class TasksService {
   }
 
   async changeStatus(id: string, status: string): Promise<Partial<Task>> {
+    // TODO: check if the status change is valid given the current status
     const doc = { status };
     const resp = await this.taskModel.updateOne({
       _id: id,
@@ -154,6 +158,8 @@ export class TasksService {
       },
     }, { new: true });
 
-    return user.seenBy;
+    return user.seenBy.map((objectId: Types.ObjectId) =>
+      objectId.toString(),
+    );
   }
 }

@@ -20,7 +20,9 @@ export class GeneralExceptionFilter implements ExceptionFilter {
     const message = this.debugMode ?
       exception.message : 'Interval Server Error';
 
-    // console.error(exception);
+    if (this.debugMode) {
+      console.error(exception);
+    }
 
     response
       .status(status)

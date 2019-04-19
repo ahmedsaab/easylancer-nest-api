@@ -104,7 +104,7 @@ export const TaskSchema = new mongoose.Schema({
 }, { versionKey: false });
 
 TaskSchema.pre<Task>('validate', function(next) {
-  if (this.startDateTime >= this.endDateTime) {
+  if (this.endDateTime && this.startDateTime >= this.endDateTime) {
     next(new BadRequestException('End Date must be greater than Start Date'));
   } else if (this.creatorUser.equals(this.workerUser)) {
     next(new BadRequestException('Creator user cannot equal Worker user'));

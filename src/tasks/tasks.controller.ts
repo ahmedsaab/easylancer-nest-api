@@ -1,10 +1,15 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { CreateDto } from './dto/create.dto';
-import { UpdateDto } from './dto/update.dto';
+import { TaskCreateDto } from './dto/task.create.dto';
+import { TaskUpdateDto } from './dto/task.update.dto';
 import { TasksService } from './tasks.service';
 import { Task } from './interfaces/task.interface';
 import { Offer } from '../offers/interfaces/offer.interface';
 import { Types } from 'mongoose';
+import { IdOnlyParams } from '../common/dto/id.params';
+import { TaskOfferQuery } from './dto/query/task-offer.query';
+import { TaskAcceptedOfferParams } from './dto/params/task-accepted-offer.params';
+import { TaskStatusParams } from './dto/params/task-status.params';
+import { TaskSeenByUserParams } from './dto/params/task-seen-by-user.params';
 
 @Controller('tasks')
 export class TasksController {
@@ -24,73 +29,70 @@ export class TasksController {
 
   @Post()
   async create(
-    @Body() dto: CreateDto,
+    @Body() dto: TaskCreateDto,
   ): Promise<Task> {
     return this.tasksService.create(dto);
   }
 
   @Get(':id')
   async findOne(
-    @Param('id') id: string,
+    @Param() params: IdOnlyParams,
   ): Promise<Task> {
-    return this.tasksService.getPopulate(id);
+    return this.tasksService.getPopulate(params.id);
   }
 
   @Put(':id')
   async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateDto,
+    @Param() params: IdOnlyParams,
+    @Body() dto: TaskUpdateDto,
   ): Promise<Task> {
-    return this.tasksService.update(id, dto);
+    return this.tasksService.update(params.id, dto);
   }
 
   @Delete(':id')
   async remove(
-    @Param('id') id: string,
+    @Param() params: IdOnlyParams,
   ): Promise<Task> {
-    return this.tasksService.remove(id);
+    return this.tasksService.remove(params.id);
   }
 
   @Get(':id/offers')
   async getOffers(
-    @Param('id') id: string,
-    @Query('userId') userId?: string,
+    @Param() params: IdOnlyParams,
+    @Query() query: TaskOfferQuery,
   ): Promise<Offer[]> {
-    const query = userId ? {
-      workerUser: Types.ObjectId(userId),
+    const selector = query.userId ? {
+      workerUser: Types.ObjectId(query.userId),
     } : undefined;
 
-    return this.tasksService.getOffers(id, query);
+    return this.tasksService.getOffers(params.id, selector);
   }
 
   @Delete(':id/offers')
   async removeOffers(
-    @Param('id') id: string,
+    @Param() params: IdOnlyParams,
   ): Promise<void> {
-    return this.tasksService.removeOffers(id);
+    return this.tasksService.removeOffers(params.id);
   }
 
-  @Put(':id/accepted-offer')
+  @Post(':id/accepted-offer/:offerId')
   async updateAcceptedOffer(
-    @Param('id') id: string,
-    @Body() dto: any,
+    @Param() params: TaskAcceptedOfferParams,
   ): Promise<Task> {
-    return this.tasksService.acceptOffer(id, dto.acceptedOffer);
+    return this.tasksService.acceptOffer(params.id, params.acceptedOfferId);
   }
 
-  @Put(':id/status')
+  @Post(':id/status/:status')
   async updateStatus(
-    @Param('id') id: string,
-    @Body() dto: any,
+    @Param() params: TaskStatusParams,
   ): Promise<Partial<Task>> {
-    return this.tasksService.changeStatus(id, dto.status);
+    return this.tasksService.changeStatus(params.id, params.status);
   }
 
-  @Get(':id/seenBy/:userId')
+  @Post(':id/seenBy/:userId')
   async seenByUser(
-    @Param('id') id: string,
-    @Param('userId') userId: string,
+    @Param() params: TaskSeenByUserParams,
   ): Promise<Partial<Task>> {
-    return this.tasksService.seenByUser(id, userId);
+    return this.tasksService.seenByUser(params.id, params.userId);
   }
 }
