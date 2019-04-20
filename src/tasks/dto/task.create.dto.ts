@@ -1,4 +1,4 @@
-import { IsDateString, IsDefined, IsIn, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDateString, IsDefined, IsIn, IsInt, IsNumber, IsOptional, IsPositive, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_TYPES } from '../../common/schema/constants';
 import { LocationDto } from './location.dto';
@@ -29,8 +29,18 @@ export class TaskCreateDto {
   readonly title: string;
 
   @IsDefined()
+  @IsPositive()
+  @IsInt()
+  readonly price: number;
+
+  @IsDefined()
   @IsDateString()
   readonly startDateTime: Date;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested()
+  readonly imagesUrls: [string];
 
   @IsOptional()
   @IsDateString()

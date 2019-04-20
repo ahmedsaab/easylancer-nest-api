@@ -34,7 +34,7 @@ export class TasksController {
     return this.tasksService.create(dto);
   }
 
-  @Get(':id')
+  @Get(':id/view')
   async findOne(
     @Param() params: IdOnlyParams,
   ): Promise<Task> {
