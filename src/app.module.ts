@@ -12,6 +12,7 @@ import { ConfigModule } from './config/config.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
       useClass: MongoService,
       imports: [ConfigModule],
     }),
-    TasksModule, UsersModule, OffersModule,
+    TasksModule, UsersModule, OffersModule, AuthModule,
   ],
   providers: [
     {

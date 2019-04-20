@@ -1,10 +1,21 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef, MethodNotAllowedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+  MethodNotAllowedException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Task } from './interfaces/task.interface';
 import { UsersService } from '../users/users.service';
 import { Offer } from '../offers/interfaces/offer.interface';
 import { OffersService } from '../offers/offers.service';
+import { TaskUpdateDto } from './dto/task.update.dto';
+import { OfferCreateDto } from '../offers/dto/offer.create.dto';
+import { OfferUpdateDto } from '../offers/dto/offer.update.dto';
 
 const refsToProps = (refs: string[]) => {
   const props = [];
@@ -38,8 +49,7 @@ export class TasksService {
   ) {}
 
   async findAll(): Promise<Task[]> {
-    return this.taskModel.find()
-      .populate(DEF_PROP);
+    return this.taskModel.find();
   }
 
   async removeAll(): Promise<any> {
@@ -95,15 +105,24 @@ export class TasksService {
     }
   }
 
-  async update(id: string, dto: any): Promise<Task> {
-    if (dto.workerUser) {
-       await this.usersService.exists(dto.workerUser);
-    }
-    const task = await this.taskModel.findById(id);
+  async userUpdate(id: string, userId: string, dto: TaskUpdateDto): Promise<Task> {
+    const task: Task = await this.taskModel.findById(id);
 
-    task.set(dto);
-    await task.save(dto);
-    return task;
+    if (task == null) {
+      throw new NotFoundException(`No task found with id ${id}`);
+    } else if (!task.creatorUser.equals(userId)) {
+      throw new UnauthorizedException(
+        `User ${userId} is not authorized to update this task`,
+      );
+    } else {
+      task.set(dto);
+      if (dto.location) {
+        task.location.set(dto.location);
+      }
+      await task.save();
+
+      return task;
+    }
   }
 
   async getOffers(id: string, query?: Partial<Offer>): Promise<Offer[]> {
@@ -131,6 +150,7 @@ export class TasksService {
       const offer = offers[0];
 
       task.acceptedOffer = new Types.ObjectId(offerId);
+      task.workerUser = offer.workerUser;
       await task.save();
       this.usersService.assignTask(offer.workerUser, task.id);
 
@@ -161,5 +181,53 @@ export class TasksService {
     return user.seenBy.map((objectId: Types.ObjectId) =>
       objectId.toString(),
     );
+  }
+
+  async createOffer(id: string, data: any): Promise<Offer> {
+    const { workerUser } = data;
+    data.task = id;
+
+    const [ task ] = await Promise.all([
+      this.get(id),
+      this.usersService.exists(workerUser),
+    ]);
+
+    if (task.creatorUser.equals(workerUser)) {
+      throw new MethodNotAllowedException(
+        'Users cannot make an offer to their own tasks',
+      );
+    } else if (task.status !== 'open') {
+      throw new MethodNotAllowedException(
+        `Task is closed for offers: status = ${task.status}`,
+      );
+    }
+    // TODO: catch mongo unique key exception
+    const offer = await this.offersService.create(data);
+
+    this.usersService.applyToTask(workerUser, id);
+
+    return offer;
+  }
+
+  async userUpdateOffer(id: string, offerId: string, userId: string, dto: OfferUpdateDto): Promise<Offer> {
+    const [ task, offer ] = await Promise.all([
+      this.get(id),
+      this.offersService.get(offerId),
+      this.usersService.exists(userId),
+    ]);
+
+    if (!offer.workerUser.equals(userId)) {
+      throw new UnauthorizedException(
+        `User ${userId} is not authorized to update this offer`,
+      );
+    } else if (task.status !== 'open') {
+      throw new MethodNotAllowedException(
+        `Task is closed for offers: status = ${task.status}`,
+      );
+    }
+    offer.set(dto);
+    await offer.save();
+
+    return offer;
   }
 }

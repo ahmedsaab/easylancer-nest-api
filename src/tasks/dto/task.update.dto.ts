@@ -1,4 +1,4 @@
-import { IsString, IsOptional, ValidateNested, IsIn, IsDateString } from 'class-validator';
+import { IsString, IsOptional, ValidateNested, IsIn, IsDateString, IsDefined, IsPositive, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocationDto } from './location.dto';
 import { PAYMENT_METHODS } from '../../common/schema/constants';
@@ -28,4 +28,9 @@ export class TaskUpdateDto {
   @ValidateNested()
   @Type(() => LocationDto)
   readonly location: LocationDto;
+
+  @IsOptional()
+  @IsPositive()
+  @IsInt()
+  readonly price: number;
 }

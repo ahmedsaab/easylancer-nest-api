@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as sort from 'smart-deep-sort';
 import * as pJson from '../../../package.json';
+import * as mongoose from 'mongoose';
 
 export interface Response<T> {
   data: T;
@@ -14,7 +15,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
     return next.handle().pipe(map(data => {
       return {
         version: pJson.version,
-        data: sortPayload(data),
+        data,
       };
     }));
   }
@@ -22,7 +23,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
 
 const sortPayload = (data: any): any => {
   function present(obj) {
-    if (obj.hasOwnProperty('toJSON')) {
+    if (obj instanceof mongoose.Model) {
       return obj.toJSON();
     } else {
       return obj;

@@ -17,15 +17,20 @@ export const OfferSchema = new mongoose.Schema({
     required: true,
   },
   paymentMethod: {
+    required: false,
     type: String,
     enum: PAYMENT_METHODS.VALUES,
     default: PAYMENT_METHODS.DEFAULT,
+  },
+  message: {
+    required: true,
+    type: String,
+    maxlength: 300,
   },
   price: {
     type: Number,
     required: true,
     min: 10,
-    default: 50,
     max: 10000,
   },
   timeToLive: {
@@ -33,10 +38,12 @@ export const OfferSchema = new mongoose.Schema({
     min: 1,
     max: 30,
     required: false,
+    default: null,
   },
   notifyCreator: {
     type: Boolean,
     required: false,
+    default: false,
   },
 }, { versionKey: false });
 

@@ -1,8 +1,8 @@
 import { IsMongoId } from 'class-validator';
 
-export class TaskAcceptedOfferParams {
+export class TaskOfferParams {
   @IsMongoId()
   id: string;
   @IsMongoId()
-  acceptedOfferId: string;
+  offerId: string;
 }

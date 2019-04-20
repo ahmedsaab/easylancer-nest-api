@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, HttpException, Inject, Injectable, MethodNotAllowedException, NotFoundException } from '@nestjs/common';
-import { UpdateDto } from './dto/update.dto';
-import { CreateDto } from './dto/create.dto';
+import { OfferUpdateDto } from './dto/offer.update.dto';
+import { OfferCreateDto } from './dto/offer.create.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Offer } from './interfaces/offer.interface';
@@ -33,32 +33,22 @@ export class OffersService {
   }
 
   async get(id: string): Promise<Offer> {
-    return this.offerModel.findById(id)
-      .populate(DEF_PROP);
+    const offer = await this.offerModel.findById(id);
+
+    if (!offer) {
+      throw new NotFoundException(`No offer found with id: ${id}`);
+    }
+    return offer;
   }
 
   async remove(id: string): Promise<any> {
     return await this.offerModel.deleteOne({ _id: id });
   }
 
-  async create(dto: any): Promise<Offer> {
-    const userId = dto.workerUser;
-    const taskId = dto.task;
-
-    const [ task ] = await Promise.all([
-      this.tasksService.get(taskId),
-      this.usersService.exists(userId),
-    ]);
-
-    if (task.creatorUser.toString() === userId) {
-      throw new MethodNotAllowedException(
-        'Users cannot make an offer to their own tasks',
-      );
-    }
+  async create(dto: OfferCreateDto): Promise<Offer> {
     const offer = new this.offerModel(dto);
 
     await offer.save();
-    this.usersService.applyToTask(userId, taskId);
 
     return offer;
   }

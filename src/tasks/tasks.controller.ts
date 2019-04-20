@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, Headers, UseGuards, Req } from '@nestjs/common';
 import { TaskCreateDto } from './dto/task.create.dto';
 import { TaskUpdateDto } from './dto/task.update.dto';
 import { TasksService } from './tasks.service';
@@ -7,9 +7,11 @@ import { Offer } from '../offers/interfaces/offer.interface';
 import { Types } from 'mongoose';
 import { IdOnlyParams } from '../common/dto/id.params';
 import { TaskOfferQuery } from './dto/query/task-offer.query';
-import { TaskAcceptedOfferParams } from './dto/params/task-accepted-offer.params';
+import { TaskOfferParams } from './dto/params/task-offer.params';
 import { TaskStatusParams } from './dto/params/task-status.params';
 import { TaskSeenByUserParams } from './dto/params/task-seen-by-user.params';
+import { AuthGuard } from '@nestjs/passport';
+import { OfferCreateDto } from '../offers/dto/offer.create.dto';
 
 @Controller('tasks')
 export class TasksController {
@@ -42,11 +44,13 @@ export class TasksController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard())
   async update(
+    @Req() req,
     @Param() params: IdOnlyParams,
     @Body() dto: TaskUpdateDto,
   ): Promise<Task> {
-    return this.tasksService.update(params.id, dto);
+    return this.tasksService.userUpdate(params.id, req.user.id, dto);
   }
 
   @Delete(':id')
@@ -68,6 +72,24 @@ export class TasksController {
     return this.tasksService.getOffers(params.id, selector);
   }
 
+  @Post(':id/offers')
+  async createOffer(
+    @Param() params: IdOnlyParams,
+    @Body() dto: OfferCreateDto,
+  ): Promise<Offer> {
+    return this.tasksService.createOffer(params.id, dto);
+  }
+
+  @Put(':id/offers/:offerId')
+  @UseGuards(AuthGuard())
+  async updateOffer(
+    @Req() req,
+    @Param() params: TaskOfferParams,
+    @Body() dto: OfferCreateDto,
+  ): Promise<Offer> {
+    return this.tasksService.userUpdateOffer(params.id, params.offerId, req.user.id, dto);
+  }
+
   @Delete(':id/offers')
   async removeOffers(
     @Param() params: IdOnlyParams,
@@ -75,11 +97,11 @@ export class TasksController {
     return this.tasksService.removeOffers(params.id);
   }
 
-  @Post(':id/accepted-offer/:offerId')
+  @Post(':id/offers/:offerId/accept')
   async updateAcceptedOffer(
-    @Param() params: TaskAcceptedOfferParams,
+    @Param() params: TaskOfferParams,
   ): Promise<Task> {
-    return this.tasksService.acceptOffer(params.id, params.acceptedOfferId);
+    return this.tasksService.acceptOffer(params.id, params.offerId);
   }
 
   @Post(':id/status/:status')
