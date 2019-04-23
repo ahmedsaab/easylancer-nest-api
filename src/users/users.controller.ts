@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query, BadRequestException } from '@nestjs/common';
-import { CreateDto } from './dto/create.dto';
-import { UpdateDto } from './dto/update.dto';
+import { UserCreateDto } from './dto/user.create.dto';
+import { UserUpdateDto } from './dto/user.update.dto';
 import { UsersService } from './users.service';
 import { User } from './interfaces/user.interface';
 import { Task } from '../tasks/interfaces/task.interface';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
-import { UpdateIsApprovedDto } from './dto/update.is-approved.dto';
-import { CreateBadgeDto } from './dto/badges/create.dto';
+import { UserUpdateIsApprovedDto } from './dto/user.update.is-approved.dto';
+import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { delay } from '../common/utils/dev-tools';
 
@@ -27,7 +27,7 @@ export class UsersController {
 
   @Post()
   async create(
-    @Body() dto: CreateDto,
+    @Body() dto: UserCreateDto,
   ): Promise<User> {
     return this.usersService.create(dto);
   }
@@ -42,7 +42,7 @@ export class UsersController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdateDto,
+    @Body() dto: UserUpdateDto,
   ): Promise<User> {
     return this.usersService.update(id, dto);
   }
@@ -64,7 +64,7 @@ export class UsersController {
   @Put(':id/is-approved')
   async updateIsApproved(
     @Param('id') id: string,
-    @Body() dto: UpdateIsApprovedDto,
+    @Body() dto: UserUpdateIsApprovedDto,
   ): Promise<Partial<User>> {
     return this.usersService.setApproved(id, dto.isApproved);
   }
@@ -72,7 +72,7 @@ export class UsersController {
   @Post(':id/badges')
   async addBadge(
     @Param('id') id: string,
-    @Body() dto: CreateBadgeDto,
+    @Body() dto: UserCreateBadgeDto,
   ): Promise<Badge[]> {
     return this.usersService.addBadge(id, dto);
   }

@@ -1,6 +1,6 @@
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
-export class UpdateSettingDto {
+export class UserUpdateSettingDto {
   @IsInt()
   @Max(5)
   @IsOptional()

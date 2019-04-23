@@ -1,14 +1,13 @@
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { UpdateDto } from './dto/update.dto';
-import { CreateDto } from './dto/create.dto';
+import { UserUpdateDto } from './dto/user.update.dto';
+import { UserCreateDto } from './dto/user.create.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './interfaces/user.interface';
 import { Task } from '../tasks/interfaces/task.interface';
 import { TasksService } from '../tasks/tasks.service';
-import { TaskRating } from '../tasks/interfaces/task-rating.interface';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
-import { CreateBadgeDto } from './dto/badges/create.dto';
+import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 
 @Injectable()
@@ -36,7 +35,7 @@ export class UsersService {
     return this.userModel.deleteOne({ _id: id });
   }
 
-  async create(dto: CreateDto): Promise<User> {
+  async create(dto: UserCreateDto): Promise<User> {
     try {
       const user = new this.userModel(dto);
       return user.save();
@@ -118,7 +117,7 @@ export class UsersService {
     return doc;
   }
 
-  async addBadge(id: string, badge: CreateBadgeDto): Promise<Badge[]> {
+  async addBadge(id: string, badge: UserCreateBadgeDto): Promise<Badge[]> {
     const user = await this.userModel.findOneAndUpdate({ _id: id }, {
       $addToSet: {
         badges: badge,
@@ -171,7 +170,7 @@ export class UsersService {
     }
   }
 
-  async update(id: string, dto: UpdateDto): Promise<User> {
+  async update(id: string, dto: UserUpdateDto): Promise<User> {
     return this.userModel.findOneAndUpdate({ _id: id }, dto, { new: true });
   }
 }

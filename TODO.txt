@@ -2,9 +2,22 @@ v Logging (includes execution time)
 v Proper response JSON
 v Proper error response JSON
 v Request timeouts
-v Ordering Json responses
 - Splunk batch logs (counter middleware)
 - Swagger documentation
-x Pagination
+- Pagination
+- Ordering Json responses
 
 
+(1) View offers endpoint on Client API
+- Review endpoint on Client and Data APIs (think about payment)
+- Cancel endpoint on Client and Data APIs (think about payment)
+
+- Accept Offer Client API (think about payment)
+- Think about payment API integration while accepting an offer and Front-end client
+request payload to the Client API to actually pay.
+
+(2) User page controller on Client API
+
+(3) My tasks page controller on Client API
+
+- Messages API (nodeJs websocket) how to integrate with Data API

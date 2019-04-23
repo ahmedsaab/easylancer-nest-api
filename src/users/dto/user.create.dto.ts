@@ -1,6 +1,8 @@
 import { IsDefined, IsEmail, MaxLength } from 'class-validator';
 
-export class CreateDto {
+// TODO: IsEmail bug with noha@gmail.com
+
+export class UserCreateDto {
   @IsDefined()
   @IsEmail()
   @MaxLength(50)

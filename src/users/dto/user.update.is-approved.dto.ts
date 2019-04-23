@@ -1,6 +1,6 @@
 import { IsBoolean, IsDefined } from 'class-validator';
 
-export class UpdateIsApprovedDto {
+export class UserUpdateIsApprovedDto {
   @IsBoolean()
   @IsDefined()
   readonly isApproved: boolean;

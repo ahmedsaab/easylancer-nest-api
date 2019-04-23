@@ -6,9 +6,9 @@ import {
   IsAlpha, IsEmail, ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UpdateSettingDto } from './settings/update.dto';
+import { UserUpdateSettingDto } from './user.update.settings.dto';
 
-export class UpdateDto {
+export class UserUpdateDto {
   @IsOptional()
   @IsEmail()
   @MaxLength(50)
@@ -36,6 +36,6 @@ export class UpdateDto {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => UpdateSettingDto)
-  readonly settings: UpdateSettingDto;
+  @Type(() => UserUpdateSettingDto)
+  readonly settings: UserUpdateSettingDto;
 }

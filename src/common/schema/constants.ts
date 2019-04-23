@@ -17,3 +17,5 @@ export const TASK_CATEGORIES = {
   VALUES: ['category1', 'category2', 'category3', 'category4'],
   DEFAULT: 'category1',
 };
+
+export const USER_SUMMARY_PROP = 'firstName lastName likes dislikes imageUrl badges isApproved';

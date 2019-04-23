@@ -16,29 +16,17 @@ import { OffersService } from '../offers/offers.service';
 import { TaskUpdateDto } from './dto/task.update.dto';
 import { OfferCreateDto } from '../offers/dto/offer.create.dto';
 import { OfferUpdateDto } from '../offers/dto/offer.update.dto';
+import { MongoDataService } from '../common/providers/mongo-data.service';
+import { USER_SUMMARY_PROP } from '../common/schema/constants';
 
-const refsToProps = (refs: string[]) => {
-  const props = [];
-  refs.forEach((ref) => {
-    if (POPULATION_PORPS.hasOwnProperty(ref)) {
-      props.push({
-        path: ref,
-        select: POPULATION_PORPS[ref],
-      });
-    }
-  });
-  return props;
+// const UPDATE_OPTIONS = { new: true, runValidators: true };
+const POPULATION_PROPS = {
+  creatorUser: USER_SUMMARY_PROP,
+  workerUser: USER_SUMMARY_PROP,
 };
-
-const UPDATE_OPTIONS = { new: true, runValidators: true };
-const POPULATION_PORPS = {
-  creatorUser: 'firstName lastName likes dislikes imageUrl badges isApproved',
-  workerUser: 'firstName lastName likes dislikes imageUrl badges isApproved',
-};
-const DEF_PROP = refsToProps(Object.keys(POPULATION_PORPS));
 
 @Injectable()
-export class TasksService {
+export class TasksService extends MongoDataService {
   constructor(
     @InjectModel('Task')
     private readonly taskModel: Model<Task>,
@@ -46,7 +34,9 @@ export class TasksService {
     private readonly offersService: OffersService,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
-  ) {}
+  ) {
+    super(POPULATION_PROPS);
+  }
 
   async findAll(): Promise<Task[]> {
     return this.taskModel.find();
@@ -58,7 +48,7 @@ export class TasksService {
 
   async getPopulate(id: string): Promise<Task> {
     const task = await this.taskModel.findById(id)
-      .populate(DEF_PROP);
+      .populate(this.DEF_PROP);
 
     if (!task) {
       throw new NotFoundException(`task with id ${id} not found`);
@@ -74,12 +64,12 @@ export class TasksService {
     return this.taskModel.deleteOne({ _id: id });
   }
 
-  async create(dto: any): Promise<Task> {
-    await this.usersService.exists(dto.creatorUser);
-    const task = new this.taskModel(dto);
+  async create(data: any): Promise<Task> {
+    await this.usersService.exists(data.creatorUser);
+    const task = new this.taskModel(data);
 
     await task.save();
-    this.usersService.createTask(dto.creatorUser, task._id);
+    this.usersService.createTask(data.creatorUser, task._id);
 
     return task;
   }
@@ -99,7 +89,7 @@ export class TasksService {
 
   async find(query, refs?: string[]): Promise<Task[]> {
     if (refs) {
-      return this.taskModel.find(query).populate(refsToProps(refs));
+      return this.taskModel.find(query).populate(this.refsToProps(refs));
     } else {
       return this.taskModel.find(query);
     }
@@ -134,6 +124,7 @@ export class TasksService {
   }
 
   async acceptOffer(id: string, offerId: string): Promise<Task> {
+    // TODO: Get offer byId
     const [ task, offers ] = await Promise.all([
       this.get(id),
       this.offersService.find({
@@ -147,11 +138,13 @@ export class TasksService {
     } else if (offers.length === 0) {
       throw new BadRequestException('Offer doesn\'t exists on this task');
     } else {
+      // TODO: Check task status before assigning
       const offer = offers[0];
 
       task.acceptedOffer = new Types.ObjectId(offerId);
       task.workerUser = offer.workerUser;
       await task.save();
+      // TODO: Change task status to 'accepted' if successful
       this.usersService.assignTask(offer.workerUser, task.id);
 
       return task;
@@ -159,7 +152,7 @@ export class TasksService {
   }
 
   async changeStatus(id: string, status: string): Promise<Partial<Task>> {
-    // TODO: check if the status change is valid given the current status
+    // TODO: check if the new status change is valid given the current status
     const doc = { status };
     const resp = await this.taskModel.updateOne({
       _id: id,
@@ -185,12 +178,13 @@ export class TasksService {
 
   async createOffer(id: string, data: any): Promise<Offer> {
     const { workerUser } = data;
-    data.task = id;
 
     const [ task ] = await Promise.all([
       this.get(id),
       this.usersService.exists(workerUser),
     ]);
+
+    data.task = id;
 
     if (task.creatorUser.equals(workerUser)) {
       throw new MethodNotAllowedException(
@@ -201,7 +195,6 @@ export class TasksService {
         `Task is closed for offers: status = ${task.status}`,
       );
     }
-    // TODO: catch mongo unique key exception
     const offer = await this.offersService.create(data);
 
     this.usersService.applyToTask(workerUser, id);
