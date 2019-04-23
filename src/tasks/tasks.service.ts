@@ -53,11 +53,18 @@ export class TasksService extends MongoDataService {
     if (!task) {
       throw new NotFoundException(`task with id ${id} not found`);
     }
+
     return task;
   }
 
   async get(id: string): Promise<Task> {
-    return this.taskModel.findById(id);
+    const task: Task = await this.taskModel.findById(id);
+
+    if (!task) {
+      throw new NotFoundException(`No task found with id ${id}`);
+    }
+
+    return task;
   }
 
   async remove(id: string): Promise<any> {
@@ -95,24 +102,16 @@ export class TasksService extends MongoDataService {
     }
   }
 
-  async userUpdate(id: string, userId: string, dto: TaskUpdateDto): Promise<Task> {
-    const task: Task = await this.taskModel.findById(id);
+  async update(id: string, dto: TaskUpdateDto): Promise<Task> {
+    const task: Task = await this.get(id);
 
-    if (task == null) {
-      throw new NotFoundException(`No task found with id ${id}`);
-    } else if (!task.creatorUser.equals(userId)) {
-      throw new UnauthorizedException(
-        `User ${userId} is not authorized to update this task`,
-      );
-    } else {
-      task.set(dto);
-      if (dto.location) {
-        task.location.set(dto.location);
-      }
-      await task.save();
-
-      return task;
+    task.set(dto);
+    if (dto.location) {
+      task.location.set(dto.location);
     }
+    await task.save();
+
+    return task;
   }
 
   async getOffers(id: string, query?: Partial<Offer>): Promise<Offer[]> {
@@ -202,18 +201,13 @@ export class TasksService extends MongoDataService {
     return offer;
   }
 
-  async userUpdateOffer(id: string, offerId: string, userId: string, dto: OfferUpdateDto): Promise<Offer> {
+  async updateOffer(id: string, offerId: string, dto: OfferUpdateDto): Promise<Offer> {
     const [ task, offer ] = await Promise.all([
       this.get(id),
       this.offersService.get(offerId),
-      this.usersService.exists(userId),
     ]);
 
-    if (!offer.workerUser.equals(userId)) {
-      throw new UnauthorizedException(
-        `User ${userId} is not authorized to update this offer`,
-      );
-    } else if (task.status !== 'open') {
+    if (task.status !== 'open') {
       throw new MethodNotAllowedException(
         `Task is closed for offers: status = ${task.status}`,
       );

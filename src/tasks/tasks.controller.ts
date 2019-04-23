@@ -10,7 +10,6 @@ import { TaskOfferQuery } from './dto/query/task-offer.query';
 import { TaskOfferParams } from './dto/params/task-offer.params';
 import { TaskStatusParams } from './dto/params/task-status.params';
 import { TaskSeenByUserParams } from './dto/params/task-seen-by-user.params';
-import { AuthGuard } from '@nestjs/passport';
 import { OfferCreateDto } from '../offers/dto/offer.create.dto';
 
 @Controller('tasks')
@@ -36,21 +35,26 @@ export class TasksController {
     return this.tasksService.create(dto);
   }
 
-  @Get(':id/view')
+  @Get(':id')
   async findOne(
+    @Param() params: IdOnlyParams,
+  ): Promise<Task> {
+    return this.tasksService.get(params.id);
+  }
+
+  @Get(':id/view')
+  async findOneView(
     @Param() params: IdOnlyParams,
   ): Promise<Task> {
     return this.tasksService.getPopulate(params.id);
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard())
   async update(
-    @Req() req,
     @Param() params: IdOnlyParams,
     @Body() dto: TaskUpdateDto,
   ): Promise<Task> {
-    return this.tasksService.userUpdate(params.id, req.user.id, dto);
+    return this.tasksService.update(params.id, dto);
   }
 
   @Delete(':id')
@@ -81,13 +85,11 @@ export class TasksController {
   }
 
   @Put(':id/offers/:offerId')
-  @UseGuards(AuthGuard())
   async updateOffer(
-    @Req() req,
     @Param() params: TaskOfferParams,
     @Body() dto: OfferCreateDto,
   ): Promise<Offer> {
-    return this.tasksService.userUpdateOffer(params.id, params.offerId, req.user.id, dto);
+    return this.tasksService.updateOffer(params.id, params.offerId, dto);
   }
 
   @Delete(':id/offers')
