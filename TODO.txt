@@ -8,16 +8,28 @@ v Request timeouts
 - Ordering Json responses
 
 
-(1) View offers endpoint on Client API
-- Review endpoint on Client and Data APIs (think about payment)
-- Cancel endpoint on Client and Data APIs (think about payment)
-
-- Accept Offer Client API (think about payment)
-- Think about payment API integration while accepting an offer and Front-end client
-request payload to the Client API to actually pay.
+v View offers endpoint on Client API
 
 (2) User page controller on Client API
 
 (3) My tasks page controller on Client API
 
-- Messages API (nodeJs websocket) how to integrate with Data API
+(4) Exception handling in Client API
+
+(5) User Authorization with JWT on Client API
+
+(6) Clean Kotlin code
+
+(7) Clean Typescript code (types + remove unused imports + test code)
+
+(8) User Authentication API
+
+(9) Payment API
+
+(10) Accept Offer on Client API (think about payment)
+
+(11) Review endpoint on Client and Data APIs (think about payment)
+
+(12) Cancel endpoint on Client and Data APIs (think about payment)
+
+(13) Messages API (nodeJs websocket) how to integrate with Data API
