@@ -13,12 +13,22 @@ export const UserSchema = new mongoose.Schema({
     match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
     maxlength: 50,
   },
+  about: {
+    type: String,
+    default: '',
+    maxlength: 400,
+  },
   createdTasks: {
     type: [ObjectId],
     ref: 'Task',
     default: [],
   },
   acceptedTasks: {
+    type: [ObjectId],
+    ref: 'Task',
+    default: [],
+  },
+  finishedTasks: {
     type: [ObjectId],
     ref: 'Task',
     default: [],

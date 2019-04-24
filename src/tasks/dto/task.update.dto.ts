@@ -1,7 +1,8 @@
-import { IsString, IsOptional, ValidateNested, IsIn, IsDateString, IsDefined, IsPositive, IsInt } from 'class-validator';
+import { IsString, IsOptional, ValidateNested, IsIn, IsDateString, IsPositive, IsInt, IsDefined } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocationDto } from './location.dto';
-import { PAYMENT_METHODS } from '../../common/schema/constants';
+import { PAYMENT_METHODS, TASK_STATUSES } from '../../common/schema/constants';
+import { TaskRatingDto } from './task-rating.dto';
 
 export class TaskUpdateDto {
   @IsOptional()
@@ -26,6 +27,16 @@ export class TaskUpdateDto {
 
   @IsOptional()
   @ValidateNested()
+  @Type(() => TaskRatingDto)
+  readonly creatorRating: TaskRatingDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => TaskRatingDto)
+  readonly workerRating: TaskRatingDto;
+
+  @IsOptional()
+  @ValidateNested()
   @Type(() => LocationDto)
   readonly location: LocationDto;
 
@@ -33,4 +44,8 @@ export class TaskUpdateDto {
   @IsPositive()
   @IsInt()
   readonly price: number;
+
+  @IsOptional()
+  @IsIn(TASK_STATUSES.VALUES)
+  status: string;
 }

@@ -11,6 +11,7 @@ export interface User extends Document {
   createdTasks: Types.ObjectId[];
   acceptedTasks: Types.ObjectId[];
   appliedTasks: Types.ObjectId[];
+  finishedTasks: Types.ObjectId[];
   lastName: string;
   lastSeen: string;
   firstName: string;

@@ -17,7 +17,8 @@ import { TaskUpdateDto } from './dto/task.update.dto';
 import { OfferCreateDto } from '../offers/dto/offer.create.dto';
 import { OfferUpdateDto } from '../offers/dto/offer.update.dto';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { USER_SUMMARY_PROP } from '../common/schema/constants';
+import { USER_SUMMARY_PROP, TASK_STATUSES } from '../common/schema/constants';
+import { TaskCreateDto } from './dto/task.create.dto';
 
 // const UPDATE_OPTIONS = { new: true, runValidators: true };
 const POPULATION_PROPS = {
@@ -71,21 +72,14 @@ export class TasksService extends MongoDataService {
     return this.taskModel.deleteOne({ _id: id });
   }
 
-  async create(data: any): Promise<Task> {
-    await this.usersService.exists(data.creatorUser);
+  async create(data: TaskCreateDto): Promise<Task> {
+    await this.usersService.get(data.creatorUser);
     const task = new this.taskModel(data);
 
     await task.save();
     this.usersService.createTask(data.creatorUser, task._id);
 
     return task;
-  }
-
-  async exists(id: string): Promise<void> {
-    const exists = (await this.taskModel.count({_id: id})) > 0;
-    if (!exists) {
-      throw new NotFoundException(`Task ${id} doesn't exist`);
-    }
   }
 
   async findByIds(ids): Promise<Task[]> {
@@ -102,14 +96,32 @@ export class TasksService extends MongoDataService {
     }
   }
 
-  async update(id: string, dto: TaskUpdateDto): Promise<Task> {
+  async update(id: string, data: TaskUpdateDto): Promise<Task> {
     const task: Task = await this.get(id);
 
-    task.set(dto);
-    if (dto.location) {
-      task.location.set(dto.location);
+    task.set(data);
+    if (
+      (data.creatorRating || data.workerRating) &&
+      !TASK_STATUSES.REVIEWABLE_VALUES.includes(task.status)
+    ) {
+      throw new MethodNotAllowedException(
+        `Cannot add a rating for a task in this status, status = ${task.status}`,
+      );
     }
-    await task.save();
+    if (data.location) {
+      task.location.set(data.location);
+    }
+    if (data.creatorRating) {
+      task.creatorRating.set(data.creatorRating);
+    }
+    if (data.workerRating) {
+      task.workerRating.set(data.workerRating);
+    }
+    if (data.status) {
+      await this.changeStatus(task, data.status);
+    } else {
+      await task.save();
+    }
 
     return task;
   }
@@ -123,44 +135,41 @@ export class TasksService extends MongoDataService {
   }
 
   async acceptOffer(id: string, offerId: string): Promise<Task> {
-    // TODO: Get offer byId
-    const [ task, offers ] = await Promise.all([
+    const [ task, offer ] = await Promise.all([
       this.get(id),
-      this.offersService.find({
-        task: Types.ObjectId(id),
-        _id: offerId,
-      }),
+      this.offersService.get(offerId),
     ]);
 
     if (task.acceptedOffer !== null) {
       throw new MethodNotAllowedException('Task already has an accepted offer');
-    } else if (offers.length === 0) {
-      throw new BadRequestException('Offer doesn\'t exists on this task');
-    } else {
-      // TODO: Check task status before assigning
-      const offer = offers[0];
-
-      task.acceptedOffer = new Types.ObjectId(offerId);
-      task.workerUser = offer.workerUser;
-      await task.save();
-      // TODO: Change task status to 'accepted' if successful
-      this.usersService.assignTask(offer.workerUser, task.id);
-
-      return task;
+    } else if (task.status !== 'open') {
+      throw new MethodNotAllowedException(`Task is not assignable, status: ${task.status}`);
     }
+
+    task.acceptedOffer = new Types.ObjectId(offerId);
+    task.workerUser = offer.workerUser;
+    await this.changeStatus(task, 'accepted');
+    this.usersService.assignTask(offer.workerUser, task.id);
+
+    return task;
   }
 
-  async changeStatus(id: string, status: string): Promise<Partial<Task>> {
-    // TODO: check if the new status change is valid given the current status
-    const doc = { status };
-    const resp = await this.taskModel.updateOne({
-      _id: id,
-    }, doc);
+  async changeStatus(idOrTask: string | Task, status: string): Promise<Task> {
+    const task = typeof idOrTask === 'string' ?
+      await this.get(idOrTask) : idOrTask;
 
-    if (resp.nModified !== 1) {
-      throw new NotFoundException(`No task found with id ${id}`);
+    if (!TASK_STATUSES.isValidNext(task.status, status)) {
+      throw new MethodNotAllowedException(
+        `Cannot change task to this status, current status = ${task.status}`,
+      );
     }
-    return doc;
+    task.status = status;
+    await task.save();
+    if (TASK_STATUSES.FINISHED_VALUES.includes(status)) {
+      this.usersService.finishTask(task.workerUser, task.id);
+    }
+
+    return task;
   }
 
   async seenByUser(id: string, userId: string): Promise<Partial<Task>> {
@@ -175,12 +184,14 @@ export class TasksService extends MongoDataService {
     );
   }
 
+  // TODO: find out what to do with this function, recommend to move to offerService
+  // TODO: change the param "data" type from any to a DTO class
   async createOffer(id: string, data: any): Promise<Offer> {
     const { workerUser } = data;
 
     const [ task ] = await Promise.all([
       this.get(id),
-      this.usersService.exists(workerUser),
+      this.usersService.get(workerUser),
     ]);
 
     data.task = id;
@@ -189,9 +200,9 @@ export class TasksService extends MongoDataService {
       throw new MethodNotAllowedException(
         'Users cannot make an offer to their own tasks',
       );
-    } else if (task.status !== 'open') {
+    } else if (task.status !== 'open' || task.workerUser) {
       throw new MethodNotAllowedException(
-        `Task is closed for offers: status = ${task.status}`,
+        `Task is closed for offers: status = ${task.status}, workerUser = ${task.workerUser}`,
       );
     }
     const offer = await this.offersService.create(data);
@@ -201,7 +212,7 @@ export class TasksService extends MongoDataService {
     return offer;
   }
 
-  async updateOffer(id: string, offerId: string, dto: OfferUpdateDto): Promise<Offer> {
+  async updateOffer(id: string, offerId: string, data: OfferUpdateDto): Promise<Offer> {
     const [ task, offer ] = await Promise.all([
       this.get(id),
       this.offersService.get(offerId),
@@ -212,7 +223,7 @@ export class TasksService extends MongoDataService {
         `Task is closed for offers: status = ${task.status}`,
       );
     }
-    offer.set(dto);
+    offer.set(data);
     await offer.save();
 
     return offer;

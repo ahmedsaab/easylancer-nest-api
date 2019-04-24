@@ -9,8 +9,22 @@ export const TASK_TYPES = {
 };
 
 export const TASK_STATUSES = {
-  VALUES: ['open', 'accepted', 'in-progress', 'done', 'not-done', 'closed', 'removed'],
+  VALUES: ['open', 'accepted', 'in-progress', 'done', 'not-done', 'cancelled', 'removed'],
   DEFAULT: 'open',
+  FINISHED_VALUES: ['done', 'not-done'],
+  REVIEWABLE_VALUES: ['in-progress'],
+  isValidNext: (oldStatus: string, newStatus: string): boolean => {
+    switch (oldStatus) {
+      case 'open':
+        return ['accepted', 'cancelled'].includes(newStatus);
+      case 'accepted':
+        return ['in-progress', 'cancelled'].includes(newStatus);
+      case 'in-progress':
+        return ['done', 'not-done'].includes(newStatus);
+      default:
+        return false;
+    }
+  },
 };
 
 export const TASK_CATEGORIES = {

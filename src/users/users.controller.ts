@@ -5,7 +5,6 @@ import { UsersService } from './users.service';
 import { User } from './interfaces/user.interface';
 import { Task } from '../tasks/interfaces/task.interface';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
-import { UserUpdateIsApprovedDto } from './dto/user.update.is-approved.dto';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { delay } from '../common/utils/dev-tools';
@@ -61,14 +60,6 @@ export class UsersController {
     return this.usersService.setLastSeen(id);
   }
 
-  @Put(':id/is-approved')
-  async updateIsApproved(
-    @Param('id') id: string,
-    @Body() dto: UserUpdateIsApprovedDto,
-  ): Promise<Partial<User>> {
-    return this.usersService.setApproved(id, dto.isApproved);
-  }
-
   @Post(':id/badges')
   async addBadge(
     @Param('id') id: string,
@@ -85,11 +76,11 @@ export class UsersController {
     return this.usersService.removeBadge(id, badgeName);
   }
 
-  @Get(':id/tasks/accepted')
+  @Get(':id/tasks/finished')
   async getAcceptedTasks(
     @Param('id') id: string,
   ): Promise<Task[]> {
-    return this.usersService.getAcceptedTasks(id);
+    return this.usersService.getFinishedTasks(id);
   }
 
   @Get(':id/tasks/created')

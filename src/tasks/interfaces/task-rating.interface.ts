@@ -1,4 +1,6 @@
-export interface TaskRating {
+import { Document } from 'mongoose';
+
+export interface TaskRating extends Document {
   criteria: Criteria;
   description: string;
   like: boolean;

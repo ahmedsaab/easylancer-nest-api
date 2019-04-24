@@ -10,7 +10,7 @@ v Request timeouts
 
 v View offers endpoint on Client API
 
-(2) User page controller on Client API
+(2) User & Profile page controller on Client API
 
 (3) My tasks page controller on Client API
 
@@ -33,3 +33,7 @@ v View offers endpoint on Client API
 (12) Cancel endpoint on Client and Data APIs (think about payment)
 
 (13) Messages API (nodeJs websocket) how to integrate with Data API
+
+(14) Cron that changes the status of "accepted" due tasks to "in-progress" using the change status endpoint
+
+(15) Make payment API changes the status of a paid task from "open" to "accepted" using the assign offer data endpoint

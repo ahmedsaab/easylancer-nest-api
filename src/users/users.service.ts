@@ -9,6 +9,7 @@ import { TasksService } from '../tasks/tasks.service';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
+import { TASK_STATUSES } from '../common/schema/constants';
 
 @Injectable()
 export class UsersService {
@@ -28,7 +29,13 @@ export class UsersService {
   }
 
   async get(id: string): Promise<User> {
-    return this.userModel.findById(id);
+    const user: User = await this.userModel.findById(id);
+
+    if (!user) {
+      throw new NotFoundException(`No user found with id ${id}`);
+    }
+
+    return user;
   }
 
   async remove(id: string): Promise<any> {
@@ -77,10 +84,24 @@ export class UsersService {
     });
   }
 
-  async getAcceptedTasks(id): Promise<Task[]> {
+  finishTask(id, taskId): void {
+    this.userModel.findOneAndUpdate({ _id: id }, {
+      $pull: {
+        acceptedTasks: taskId,
+      },
+      $addToSet: {
+        finishedTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  async getFinishedTasks(id, popRefs = []): Promise<Task[]> {
     return this.tasksService.find({
       workerUser: id,
-    });
+      status: { $in: TASK_STATUSES.FINISHED_VALUES },
+    }, popRefs);
   }
 
   async getCreatedTasks(id): Promise<Task[]> {
@@ -92,20 +113,6 @@ export class UsersService {
   async setLastSeen(id: string, dateTime?: Date): Promise<Partial<User>> {
     const doc = {
       lastSeen: (dateTime || new Date()).toUTCString(),
-    };
-    const resp = await this.userModel.updateOne({
-      _id: id,
-    }, doc);
-
-    if (resp.nModified !== 1) {
-      throw new NotFoundException(`No user found with id ${id}`);
-    }
-    return doc;
-  }
-
-  async setApproved(id: string, flag: boolean): Promise<Partial<User>> {
-    const doc = {
-      isApproved: !!flag,
     };
     const resp = await this.userModel.updateOne({
       _id: id,
@@ -146,28 +153,21 @@ export class UsersService {
 
   async getRelatedTasks(id): Promise<Task[]> {
     const user = await this.get(id);
-    const { acceptedTasks, appliedTasks, createdTasks } = user;
+    const { acceptedTasks, appliedTasks, createdTasks, finishedTasks } = user;
 
-    const taskIds = [...acceptedTasks, ...appliedTasks, ...createdTasks];
+    const taskIds =
+      [...acceptedTasks, ...appliedTasks, ...createdTasks, ...finishedTasks];
 
     return this.tasksService.findByIds(taskIds);
   }
 
   async getReviews(id): Promise<TaskReview[]> {
-    const tasks = await this.tasksService.find({
-      workerUser: id,
-    }, [ 'creatorUser']);
+    const tasks = await this.getFinishedTasks(id, [ 'creatorUser']);
+
     return tasks.map((task) => ({
       creatorUser: task.creatorUser,
       ...task.creatorRating,
     }));
-  }
-
-  async exists(id: string): Promise<void> {
-    const userExists = (await this.userModel.count({_id: id})) > 0;
-    if (!userExists) {
-      throw new NotFoundException(`User ${id} doesn't exist`);
-    }
   }
 
   async update(id: string, dto: UserUpdateDto): Promise<User> {
