@@ -2,7 +2,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  MethodNotAllowedException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -67,11 +66,11 @@ export class OffersService extends MongoDataService {
     ]);
 
     if (task.creatorUser.equals(data.workerUser)) {
-      throw new MethodNotAllowedException(
+      throw new UnprocessableEntityException(
         'Users cannot make an offer to their own tasks',
       );
     } else if (task.status !== 'open') {
-      throw new MethodNotAllowedException(
+      throw new UnprocessableEntityException(
         `Task is closed for offers: status = ${task.status}`,
       );
     } else {
@@ -80,7 +79,7 @@ export class OffersService extends MongoDataService {
       } catch (error) {
         if (error.name === 'MongoError' && error.code === 11000) {
           throw new UnprocessableEntityException(
-            `Offer already exist for user ${data.workerUser}`,
+            `Offer already exist for (user, task) => (${data.workerUser}, ${data.task})`,
           );
         }
         throw error;
@@ -95,7 +94,7 @@ export class OffersService extends MongoDataService {
     const offer = await this.getPopulate(id, ['task']) as any;
 
     if (offer.task.status !== 'open') {
-      throw new MethodNotAllowedException(
+      throw new UnprocessableEntityException(
         `Task is closed for offers: status = ${offer.task.status}`,
       );
     }
@@ -106,7 +105,7 @@ export class OffersService extends MongoDataService {
     return offer;
   }
 
-  async find(query?: FindOfferQuery, refs?: string[]): Promise<Offer[]> {
+  async find(query?: FindOfferQuery, refs: string[] = []): Promise<Offer[]> {
     return this.offerModel.find(query)
       .populate(this.refsToProps(refs));
   }

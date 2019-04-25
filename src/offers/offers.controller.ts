@@ -16,6 +16,13 @@ export class OffersController {
     return this.offersService.find(query);
   }
 
+  @Get('/view')
+  async findPopulated(
+    @Query() query: FindOfferQuery,
+  ): Promise<Offer[]> {
+    return this.offersService.find(query, ['workerUser']);
+  }
+
   @Delete()
   async removeAll(
     @Query() query: FindOfferQuery,

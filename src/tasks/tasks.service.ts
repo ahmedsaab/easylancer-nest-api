@@ -1,21 +1,16 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
   forwardRef,
   MethodNotAllowedException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Task } from './interfaces/task.interface';
 import { UsersService } from '../users/users.service';
-import { Offer } from '../offers/interfaces/offer.interface';
 import { OffersService } from '../offers/offers.service';
 import { TaskUpdateDto } from './dto/task.update.dto';
-import { OfferCreateDto } from '../offers/dto/offer.create.dto';
-import { OfferUpdateDto } from '../offers/dto/offer.update.dto';
 import { MongoDataService } from '../common/providers/mongo-data.service';
 import { USER_SUMMARY_PROP, TASK_STATUSES } from '../common/schema/constants';
 import { TaskCreateDto } from './dto/task.create.dto';
@@ -99,63 +94,67 @@ export class TasksService extends MongoDataService {
   }
 
   async update(id: string, data: TaskUpdateDto): Promise<Task> {
-    const task: Task = await this.get(id);
+    const taskNew: Task = await this.get(id);
     const actionQueue = new DeferredActionsQueue();
+    const taskOld = { ...taskNew.toJSON() };
 
-    task.set(data);
+    taskNew.set(data);
 
     if (
       (data.creatorRating || data.workerRating) &&
-      !TASK_STATUSES.REVIEWABLE_VALUES.includes(task.status)
+      !TASK_STATUSES.REVIEWABLE_VALUES.includes(taskOld.status)
     ) {
       throw new MethodNotAllowedException(
-        `Cannot add a rating for a task in this status, status = ${task.status}`,
+        `Cannot add a rating for a task in this status, status = ${taskOld.status}`,
       );
     }
     if (data.creatorRating) {
-      task.creatorRating.set(data.creatorRating);
+      taskNew.creatorRating.set(data.creatorRating);
     }
     if (data.workerRating) {
-      task.workerRating.set(data.workerRating);
+      taskNew.workerRating.set(data.workerRating);
     }
     if (data.location) {
-      task.location.set(data.location);
+      taskNew.location.set(data.location);
     }
     if (data.acceptedOffer) {
       const offer = await this.offersService.get(data.acceptedOffer);
 
-      if (task.acceptedOffer !== null) {
+      if (taskOld.acceptedOffer) {
         throw new MethodNotAllowedException('Task already has an accepted offer');
       } else if (data.status && data.status !== 'accepted') {
         throw new MethodNotAllowedException(
           `Only task 'status' value of "accepted" is allowed when assigning a task`,
         );
       }
+
       data.status = 'accepted';
-      task.workerUser = offer.workerUser;
+      taskNew.workerUser = offer.workerUser;
+
       actionQueue.queue({
-        method: this.usersService.assignTask,
-        params: [task.workerUser, task.id],
+        method: this.usersService.assignTask.bind(this.usersService),
+        params: [taskNew.workerUser, taskNew.id],
       });
     }
     if (data.status) {
-      if (!TASK_STATUSES.isValidNext(task.status, data.status)) {
+      if (!TASK_STATUSES.isValidNext(taskOld.status, data.status)) {
         throw new MethodNotAllowedException(
-          `Cannot change task to this status, current status = ${task.status}`,
+          `Cannot change task to status '${data.status}' given current is '${taskOld.status}'`,
         );
       }
       if (TASK_STATUSES.FINISHED_VALUES.includes(data.status)) {
         actionQueue.queue({
-          method: this.usersService.finishTask,
-          params: [task.workerUser, task.id],
+          method: this.usersService.finishTask.bind(this.usersService),
+          params: [taskNew.workerUser, taskNew.id],
         });
       }
+      taskNew.status = data.status;
     }
 
-    await task.save();
+    await taskNew.save();
     actionQueue.execute();
 
-    return task;
+    return taskNew;
   }
 
   async seenByUser(id: string, userId: string): Promise<Partial<Task>> {
