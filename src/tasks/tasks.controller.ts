@@ -3,14 +3,8 @@ import { TaskCreateDto } from './dto/task.create.dto';
 import { TaskUpdateDto } from './dto/task.update.dto';
 import { TasksService } from './tasks.service';
 import { Task } from './interfaces/task.interface';
-import { Offer } from '../offers/interfaces/offer.interface';
-import { Types } from 'mongoose';
 import { IdOnlyParams } from '../common/dto/id.params';
-import { TaskOfferQuery } from './dto/query/task-offer.query';
-import { TaskOfferParams } from './dto/params/task-offer.params';
-import { TaskStatusParams } from './dto/params/task-status.params';
 import { TaskSeenByUserParams } from './dto/params/task-seen-by-user.params';
-import { OfferCreateDto } from '../offers/dto/offer.create.dto';
 
 @Controller('tasks')
 export class TasksController {
@@ -62,55 +56,6 @@ export class TasksController {
     @Param() params: IdOnlyParams,
   ): Promise<Task> {
     return this.tasksService.remove(params.id);
-  }
-
-  @Get(':id/offers')
-  async getOffers(
-    @Param() params: IdOnlyParams,
-    @Query() query: TaskOfferQuery,
-  ): Promise<Offer[]> {
-    const selector = query.userId ? {
-      workerUser: Types.ObjectId(query.userId),
-    } : undefined;
-
-    return this.tasksService.getOffers(params.id, selector);
-  }
-
-  @Post(':id/offers')
-  async createOffer(
-    @Param() params: IdOnlyParams,
-    @Body() dto: OfferCreateDto,
-  ): Promise<Offer> {
-    return this.tasksService.createOffer(params.id, dto);
-  }
-
-  @Put(':id/offers/:offerId')
-  async updateOffer(
-    @Param() params: TaskOfferParams,
-    @Body() dto: OfferCreateDto,
-  ): Promise<Offer> {
-    return this.tasksService.updateOffer(params.id, params.offerId, dto);
-  }
-
-  @Delete(':id/offers')
-  async removeOffers(
-    @Param() params: IdOnlyParams,
-  ): Promise<void> {
-    return this.tasksService.removeOffers(params.id);
-  }
-
-  @Post(':id/offers/:offerId/accept')
-  async updateAcceptedOffer(
-    @Param() params: TaskOfferParams,
-  ): Promise<Task> {
-    return this.tasksService.acceptOffer(params.id, params.offerId);
-  }
-
-  @Post(':id/status/:status')
-  async updateStatus(
-    @Param() params: TaskStatusParams,
-  ): Promise<Partial<Task>> {
-    return this.tasksService.changeStatus(params.id, params.status);
   }
 
   @Post(':id/seenBy/:userId')

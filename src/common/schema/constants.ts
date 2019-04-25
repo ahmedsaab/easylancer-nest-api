@@ -32,4 +32,10 @@ export const TASK_CATEGORIES = {
   DEFAULT: 'category1',
 };
 
-export const USER_SUMMARY_PROP = 'firstName lastName likes dislikes imageUrl badges isApproved';
+// TODO: Create interface UserSummary
+export const USER_SUMMARY_PROP =
+  'firstName lastName likes dislikes imageUrl badges isApproved';
+
+// TODO: Create interface TaskSummary
+export const TASK_SUMMARY_PROP =
+  'status creatorUser';

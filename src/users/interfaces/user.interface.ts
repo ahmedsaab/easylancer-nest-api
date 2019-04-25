@@ -3,6 +3,7 @@ import { Badge } from './bade.interface';
 import { UserRating } from './user-rating.interface';
 import { Setting } from './setting.interface';
 
+// TODO: Change type of lastSeen to Date
 export interface User extends Document {
   name: string;
   age: number;

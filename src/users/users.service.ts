@@ -51,7 +51,7 @@ export class UsersService {
     }
   }
 
-  applyToTask(id, taskId): void {
+  applyToTask(id: string, taskId: string): void {
     this.userModel.findOneAndUpdate({ _id: id }, {
       $addToSet: {
         appliedTasks: taskId,
@@ -61,7 +61,7 @@ export class UsersService {
     });
   }
 
-  createTask(id, taskId): void {
+  createTask(id: string, taskId: string): void {
     this.userModel.findOneAndUpdate({ _id: id }, {
       $addToSet: {
         createdTasks: taskId,
@@ -71,7 +71,7 @@ export class UsersService {
     });
   }
 
-  assignTask(id, taskId): void {
+  assignTask(id: string, taskId: string): void {
     this.userModel.findOneAndUpdate({ _id: id }, {
       $pull: {
         appliedTasks: taskId,
@@ -84,7 +84,7 @@ export class UsersService {
     });
   }
 
-  finishTask(id, taskId): void {
+  finishTask(id: string, taskId: string): void {
     this.userModel.findOneAndUpdate({ _id: id }, {
       $pull: {
         acceptedTasks: taskId,

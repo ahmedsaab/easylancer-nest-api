@@ -1,7 +1,5 @@
 import {
-  BadRequestException,
   forwardRef,
-  HttpException,
   Inject,
   Injectable,
   MethodNotAllowedException,
@@ -15,10 +13,14 @@ import { UsersService } from '../users/users.service';
 import { TasksService } from '../tasks/tasks.service';
 import { MongoError } from 'mongodb';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { USER_SUMMARY_PROP } from '../common/schema/constants';
+import { TASK_SUMMARY_PROP, USER_SUMMARY_PROP } from '../common/schema/constants';
+import { FindOfferQuery } from './dto/query/find-offer.query';
+import { OfferCreateDto } from './dto/offer.create.dto';
+import { OfferUpdateDto } from './dto/offer.update.dto';
 
 const POPULATION_PROPS = {
   workerUser: USER_SUMMARY_PROP,
+  task: TASK_SUMMARY_PROP,
 };
 
 @Injectable()
@@ -33,15 +35,6 @@ export class OffersService extends MongoDataService {
     super(POPULATION_PROPS);
   }
 
-  async findAll(): Promise<Offer[]> {
-    return this.offerModel.find()
-      .populate(this.DEF_PROP);
-  }
-
-  async removeAll(): Promise<any> {
-    return this.offerModel.deleteMany({});
-  }
-
   async get(id: string): Promise<Offer> {
     const offer = await this.offerModel.findById(id);
 
@@ -51,46 +44,74 @@ export class OffersService extends MongoDataService {
     return offer;
   }
 
+  async getPopulate(id: string, refs: string[]): Promise<Offer> {
+    const offer = await this.offerModel.findById(id)
+      .populate(refs.length ? this.refsToProps(refs) : this.DEF_PROP);
+
+    if (!offer) {
+      throw new NotFoundException(`No offer found with id: ${id}`);
+    }
+
+    return offer;
+  }
+
   async remove(id: string): Promise<any> {
     return await this.offerModel.deleteOne({ _id: id });
   }
 
-  async create(data: Partial<Offer>): Promise<Offer> {
-    try {
-      const offer = new this.offerModel(data);
+  async create(data: OfferCreateDto): Promise<Offer> {
+    const offer = new this.offerModel(data);
+    const [ task ] = await Promise.all([
+      this.tasksService.get(data.task),
+      this.usersService.get(data.workerUser),
+    ]);
 
-      await offer.save();
+    if (task.creatorUser.equals(data.workerUser)) {
+      throw new MethodNotAllowedException(
+        'Users cannot make an offer to their own tasks',
+      );
+    } else if (task.status !== 'open') {
+      throw new MethodNotAllowedException(
+        `Task is closed for offers: status = ${task.status}`,
+      );
+    } else {
+      try {
+        await offer.save();
+      } catch (error) {
+        if (error.name === 'MongoError' && error.code === 11000) {
+          throw new UnprocessableEntityException(
+            `Offer already exist for user ${data.workerUser}`,
+          );
+        }
+        throw error;
+      }
+      this.usersService.applyToTask(data.workerUser, task.id);
 
       return offer;
-    } catch (error) {
-      if (error.name === 'MongoError' && error.code === 11000) {
-        throw new UnprocessableEntityException(
-          `Offer already exist for user ${data.workerUser} on task ${data.task}`,
-        );
-      }
-      throw error;
     }
-
   }
 
-  async findByTask(taskId, query?: Partial<Offer>): Promise<Offer[]> {
-    return this.offerModel.find({ task: taskId, ...query })
-      .populate(this.DEF_PROP);
-  }
+  async update(id: string, data: OfferUpdateDto): Promise<Offer> {
+    const offer = await this.getPopulate(id, ['task']) as any;
 
-  async find(query?: Partial<Offer>): Promise<Offer[]> {
-    return this.offerModel.find(query);
-  }
-
-  async removeByTask(taskId) {
-    return this.offerModel.deleteMany({ task: taskId });
-  }
-
-  async update(id: string, data: any): Promise<Offer> {
-    const offer = await this.offerModel.findById(id);
+    if (offer.task.status !== 'open') {
+      throw new MethodNotAllowedException(
+        `Task is closed for offers: status = ${offer.task.status}`,
+      );
+    }
 
     offer.set(data);
     await offer.save(data);
+
     return offer;
+  }
+
+  async find(query?: FindOfferQuery, refs?: string[]): Promise<Offer[]> {
+    return this.offerModel.find(query)
+      .populate(this.refsToProps(refs));
+  }
+
+  async removeMany(query?: FindOfferQuery) {
+    return this.offerModel.deleteMany(query);
   }
 }

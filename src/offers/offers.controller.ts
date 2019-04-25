@@ -1,20 +1,41 @@
-import { Controller, Get, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Delete, Query, Post, Body, Put } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { Offer } from './interfaces/offer.interface';
+import { IdOnlyParams } from '../common/dto/id.params';
+import { OfferCreateDto } from './dto/offer.create.dto';
+import { FindOfferQuery } from './dto/query/find-offer.query';
+
 @Controller('offers')
 export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 
-  // Only for development
   @Get()
-  async findAll(): Promise<Offer[]> {
-    return this.offersService.findAll();
+  async find(
+    @Query() query: FindOfferQuery,
+  ): Promise<Offer[]> {
+    return this.offersService.find(query);
   }
 
-  // Only for development
   @Delete()
-  async removeAll(): Promise<void> {
-    return this.offersService.removeAll();
+  async removeAll(
+    @Query() query: FindOfferQuery,
+  ): Promise<any> {
+    return this.offersService.removeMany(query);
+  }
+
+  @Post()
+  async create(
+    @Body() dto: OfferCreateDto,
+  ): Promise<Offer> {
+    return this.offersService.create(dto);
+  }
+
+  @Put(':id')
+  async update(
+    @Param() params: IdOnlyParams,
+    @Body() dto: OfferCreateDto,
+  ): Promise<Offer> {
+    return this.offersService.update(params.id, dto);
   }
 
   @Delete(':id')

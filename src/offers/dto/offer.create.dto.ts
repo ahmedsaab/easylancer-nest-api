@@ -35,4 +35,8 @@ export class OfferCreateDto {
   @IsDefined()
   @IsString()
   readonly message: string;
+
+  @IsDefined()
+  @IsMongoId()
+  task: string;
 }
