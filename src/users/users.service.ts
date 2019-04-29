@@ -166,7 +166,7 @@ export class UsersService {
 
     return tasks.map((task) => ({
       creatorUser: task.creatorUser,
-      ...task.creatorRating,
+      ...task.creatorRating.toJSON(),
     }));
   }
 

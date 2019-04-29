@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import { BadgeSchema } from './badge.schema';
 import { SettingSchema } from './setting.schema';
 import { UserRatingSchema } from './user-rating.schema';
+import { PhoneNumberUtil } from 'google-libphonenumber';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -17,6 +18,27 @@ export const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
     maxlength: 400,
+  },
+  city: {
+    type: String,
+    default: null,
+    maxlength: 30,
+  },
+  birthDate: {
+    type: Date,
+    default: null,
+  },
+  phoneNumber: {
+    type: String,
+    default: null,
+    validate: (num) => {
+      try {
+        PhoneNumberUtil.getInstance().parse(num);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
   },
   createdTasks: {
     type: [ObjectId],

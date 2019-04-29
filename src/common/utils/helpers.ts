@@ -18,7 +18,7 @@ export class DeferredActionsQueue {
 
   public execute() {
     this.actions.forEach((action: IDeferredAction) => {
-      action.method(action.params);
+      action.method(...action.params);
     });
   }
 }

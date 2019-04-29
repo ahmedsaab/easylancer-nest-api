@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
   forwardRef,
-  MethodNotAllowedException,
+  MethodNotAllowedException, ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -69,9 +69,9 @@ export class TasksService extends MongoDataService {
   }
 
   async create(data: TaskCreateDto): Promise<Task> {
-    await this.usersService.get(data.creatorUser);
     const task = new this.taskModel(data);
 
+    await this.usersService.get(data.creatorUser);
     await task.save();
     this.usersService.createTask(data.creatorUser, task._id);
 
@@ -93,26 +93,56 @@ export class TasksService extends MongoDataService {
     }
   }
 
+  // TODO: Lock task before update, retry to gain lock X times on locked resource
   async update(id: string, data: TaskUpdateDto): Promise<Task> {
     const taskNew: Task = await this.get(id);
     const actionQueue = new DeferredActionsQueue();
-    const taskOld = { ...taskNew.toJSON() };
+    const taskOld = taskNew.toJSON();
 
     taskNew.set(data);
 
     if (
-      (data.creatorRating || data.workerRating) &&
-      !TASK_STATUSES.REVIEWABLE_VALUES.includes(taskOld.status)
+      (
+        data.price || data.endDateTime || data.startDateTime ||
+        data.description || data.paymentMethod || data.title ||
+        data.location
+      ) && taskOld.status !== 'open'
     ) {
-      throw new MethodNotAllowedException(
-        `Cannot add a rating for a task in this status, status = ${taskOld.status}`,
-      );
+        throw new MethodNotAllowedException(
+          `Cannot update these attributes because task 'status' is not 'open'`,
+        );
     }
-    if (data.creatorRating) {
-      taskNew.creatorRating.set(data.creatorRating);
-    }
-    if (data.workerRating) {
-      taskNew.workerRating.set(data.workerRating);
+    if (data.creatorRating || data.workerRating) {
+      if (data.acceptedOffer) {
+        throw new ConflictException(
+          `Cannot set "creatorRating" or "workerRating" while setting "acceptedOffer"`,
+        );
+      } else if (!TASK_STATUSES.REVIEWABLE_VALUES.includes(taskOld.status)) {
+        throw new MethodNotAllowedException(
+          `Cannot add a rating for a task in the '${taskOld.status}' status`,
+        );
+      } else {
+        if (data.creatorRating) {
+          taskNew.creatorRating.set(data.creatorRating);
+        }
+        if (data.workerRating) {
+          taskNew.workerRating.set(data.workerRating);
+        }
+
+        const creatorVote = taskNew.creatorRating && taskNew.creatorRating.like;
+        const workerVote = taskNew.workerRating && taskNew.workerRating.like;
+
+        if (creatorVote === true) {
+          taskNew.status = 'done';
+        } else if (creatorVote === false && workerVote === false) {
+          taskNew.status = 'not-done';
+        } else if (
+          taskNew.creatorRating && taskNew.workerRating &&
+          creatorVote !== workerVote
+        ) {
+          taskNew.status = 'investigate';
+        }
+      }
     }
     if (data.location) {
       taskNew.location.set(data.location);
@@ -121,34 +151,54 @@ export class TasksService extends MongoDataService {
       const offer = await this.offersService.get(data.acceptedOffer);
 
       if (taskOld.acceptedOffer) {
-        throw new MethodNotAllowedException('Task already has an accepted offer');
-      } else if (data.status && data.status !== 'accepted') {
         throw new MethodNotAllowedException(
-          `Only task 'status' value of "accepted" is allowed when assigning a task`,
+          `Cannot set 'acceptedOffer' because attribute is already set`);
+      } else if (taskOld.status !== 'open') {
+        throw new MethodNotAllowedException(
+          `Cannot set 'acceptedOffer because task 'status' is not 'open'`,
         );
       }
 
-      data.status = 'accepted';
+      taskNew.status = 'accepted';
+      taskNew.price = offer.price;
+      taskNew.paymentMethod = offer.paymentMethod;
       taskNew.workerUser = offer.workerUser;
-
-      actionQueue.queue({
-        method: this.usersService.assignTask.bind(this.usersService),
-        params: [taskNew.workerUser, taskNew.id],
-      });
     }
     if (data.status) {
-      if (!TASK_STATUSES.isValidNext(taskOld.status, data.status)) {
-        throw new MethodNotAllowedException(
-          `Cannot change task to status '${data.status}' given current is '${taskOld.status}'`,
+      if (data.creatorRating || data.workerRating || data.acceptedOffer) {
+        throw new ConflictException(
+          `Cannot set "status" while setting creatorRating", ` +
+          `"workerRating", or "acceptedOffer"`,
         );
       }
-      if (TASK_STATUSES.FINISHED_VALUES.includes(data.status)) {
+      if (!TASK_STATUSES.isValidNext(taskOld.status, data.status)) {
+        throw new MethodNotAllowedException(
+          `Cannot change task to status '${data.status}' ` +
+          `given current is '${taskOld.status}'`,
+        );
+      }
+      if (data.status === 'in-progress' && taskOld.startDateTime > Date.now()) {
+        throw new MethodNotAllowedException(
+          `Cannot set task to '${data.status}' ` +
+          `before it's start time of '${taskOld.startDateTime}'`,
+        );
+      }
+      taskNew.status = data.status;
+    }
+    if (
+      taskNew.isModified('status')
+    ) {
+      if (TASK_STATUSES.FINISHED_VALUES.includes(taskNew.status)) {
         actionQueue.queue({
           method: this.usersService.finishTask.bind(this.usersService),
           params: [taskNew.workerUser, taskNew.id],
         });
+      } else if (taskNew.status === 'accepted') {
+        actionQueue.queue({
+          method: this.usersService.assignTask.bind(this.usersService),
+          params: [taskNew.workerUser, taskNew.id],
+        });
       }
-      taskNew.status = data.status;
     }
 
     await taskNew.save();
