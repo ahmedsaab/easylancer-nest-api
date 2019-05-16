@@ -14,7 +14,7 @@ v Request timeouts
 
 (v) My tasks page controller on Client API
 
-(4) Exception handling in Client API
+(v) Exception handling in Client API
 
 (5) User Authorization with JWT on Client API
 

@@ -17,6 +17,7 @@ export interface User extends Document {
   lastSeen: string;
   firstName: string;
   imageUrl: string;
+  password: string;
   dislikes: number;
   likes: number;
   isApproved: boolean;

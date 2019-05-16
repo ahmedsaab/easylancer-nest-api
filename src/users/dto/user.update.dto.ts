@@ -31,6 +31,10 @@ export class UserUpdateDto {
   readonly phoneNumber: string;
 
   @IsOptional()
+  @IsString()
+  readonly password: string;
+
+  @IsOptional()
   @IsDateString()
   readonly birthDate: Date;
 

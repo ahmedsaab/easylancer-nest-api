@@ -15,4 +15,7 @@ export class UserCreateDto {
   @IsString()
   @MaxLength(30)
   readonly lastName: string;
+  @IsDefined()
+  @IsString()
+  readonly password: string;
 }

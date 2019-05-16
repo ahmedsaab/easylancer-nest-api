@@ -8,15 +8,18 @@ import { TaskReview } from '../tasks/interfaces/task-review.interface';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { delay } from '../common/utils/dev-tools';
+import { FindUserQuery } from './dto/query/find-user.query';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  async findAll(): Promise<User[]> {
+  async find(
+    @Query() query: FindUserQuery,
+  ): Promise<User[]> {
     // await delay(5000);
-    return this.usersService.findAll();
+    return this.usersService.find(query);
   }
 
   @Delete()

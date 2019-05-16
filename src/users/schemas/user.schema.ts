@@ -24,6 +24,10 @@ export const UserSchema = new mongoose.Schema({
     default: null,
     maxlength: 30,
   },
+  password: {
+    type: String,
+    required: true,
+  },
   birthDate: {
     type: Date,
     default: null,
@@ -33,7 +37,9 @@ export const UserSchema = new mongoose.Schema({
     default: null,
     validate: (num) => {
       try {
-        PhoneNumberUtil.getInstance().parse(num);
+        if (num) {
+          PhoneNumberUtil.getInstance().parse(num);
+        }
         return true;
       } catch (e) {
         return false;

@@ -10,6 +10,7 @@ import { TaskReview } from '../tasks/interfaces/task-review.interface';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { TASK_STATUSES } from '../common/schema/constants';
+import { FindUserQuery } from './dto/query/find-user.query';
 
 @Injectable()
 export class UsersService {
@@ -20,8 +21,8 @@ export class UsersService {
     private readonly tasksService: TasksService,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return this.userModel.find();
+  async find(query?: FindUserQuery): Promise<User[]> {
+    return this.userModel.find(query);
   }
 
   async removeAll(): Promise<any> {
