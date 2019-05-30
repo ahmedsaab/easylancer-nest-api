@@ -5,10 +5,7 @@ import { Setting } from './setting.interface';
 
 // TODO: Change type of lastSeen to Date
 export interface User extends Document {
-  name: string;
-  age: number;
-  breed: string;
-  email: string;
+  auth: string;
   createdTasks: Types.ObjectId[];
   acceptedTasks: Types.ObjectId[];
   appliedTasks: Types.ObjectId[];

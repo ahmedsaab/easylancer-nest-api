@@ -3,17 +3,15 @@ import {
   MaxLength,
   IsOptional,
   IsIn,
-  IsAlpha, IsEmail, ValidateNested, IsBoolean, IsDateString,
+  IsAlpha,
+  ValidateNested,
+  IsBoolean,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserUpdateSettingDto } from './user.update.settings.dto';
 
 export class UserUpdateDto {
-  @IsOptional()
-  @IsEmail()
-  @MaxLength(50)
-  readonly email: string;
-
   @IsOptional()
   @IsString()
   @MaxLength(30)
@@ -29,10 +27,6 @@ export class UserUpdateDto {
   @IsOptional()
   @IsString()
   readonly phoneNumber: string;
-
-  @IsOptional()
-  @IsString()
-  readonly password: string;
 
   @IsOptional()
   @IsDateString()

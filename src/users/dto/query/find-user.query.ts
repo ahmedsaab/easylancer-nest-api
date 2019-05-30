@@ -1,7 +1,7 @@
-import { IsEmail, IsOptional } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class FindUserQuery {
   @IsOptional()
-  @IsEmail()
-  email: string;
+  @IsString()
+  auth: string;
 }

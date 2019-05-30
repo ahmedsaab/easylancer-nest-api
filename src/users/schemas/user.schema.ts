@@ -7,26 +7,20 @@ import { PhoneNumberUtil } from 'google-libphonenumber';
 const { ObjectId } = mongoose.Schema.Types;
 
 export const UserSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-    maxlength: 50,
-  },
   about: {
     type: String,
     default: '',
     maxlength: 400,
   },
+  auth: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   city: {
     type: String,
     default: null,
     maxlength: 30,
-  },
-  password: {
-    type: String,
-    required: true,
   },
   birthDate: {
     type: Date,

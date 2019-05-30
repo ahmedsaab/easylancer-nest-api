@@ -1,12 +1,11 @@
-import { IsDefined, IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsDefined, IsOptional, IsString, MaxLength } from 'class-validator';
 
 // TODO: IsEmail bug with noha@gmail.com
 
 export class UserCreateDto {
   @IsDefined()
-  @IsEmail()
-  @MaxLength(50)
-  readonly email: string;
+  @IsString()
+  readonly auth: string;
   @IsOptional()
   @IsString()
   @MaxLength(30)
@@ -15,7 +14,4 @@ export class UserCreateDto {
   @IsString()
   @MaxLength(30)
   readonly lastName: string;
-  @IsDefined()
-  @IsString()
-  readonly password: string;
 }
