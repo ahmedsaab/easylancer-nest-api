@@ -4,6 +4,7 @@ import { Offer } from './interfaces/offer.interface';
 import { IdOnlyParams } from '../common/dto/id.params';
 import { OfferCreateDto } from './dto/offer.create.dto';
 import { FindOfferQuery } from './dto/query/find-offer.query';
+import { delay } from '../common/utils/dev-tools';
 
 @Controller('offers')
 export class OffersController {
@@ -20,6 +21,7 @@ export class OffersController {
   async findPopulated(
     @Query() query: FindOfferQuery,
   ): Promise<Offer[]> {
+    // await delay(5000);
     return this.offersService.find(query, ['workerUser']);
   }
 

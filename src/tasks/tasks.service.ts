@@ -3,7 +3,8 @@ import {
   Injectable,
   NotFoundException,
   forwardRef,
-  MethodNotAllowedException, ConflictException,
+  ConflictException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -108,17 +109,17 @@ export class TasksService extends MongoDataService {
         data.location
       ) && taskOld.status !== 'open'
     ) {
-        throw new MethodNotAllowedException(
+        throw new ConflictException(
           `Cannot update these attributes because task 'status' is not 'open'`,
         );
     }
     if (data.creatorRating || data.workerRating) {
       if (data.acceptedOffer) {
-        throw new ConflictException(
+        throw new UnprocessableEntityException(
           `Cannot set "creatorRating" or "workerRating" while setting "acceptedOffer"`,
         );
       } else if (!TASK_STATUSES.REVIEWABLE_VALUES.includes(taskOld.status)) {
-        throw new MethodNotAllowedException(
+        throw new ConflictException(
           `Cannot add a rating for a task in the '${taskOld.status}' status`,
         );
       } else {
@@ -151,10 +152,10 @@ export class TasksService extends MongoDataService {
       const offer = await this.offersService.get(data.acceptedOffer);
 
       if (taskOld.acceptedOffer) {
-        throw new MethodNotAllowedException(
+        throw new ConflictException(
           `Cannot set 'acceptedOffer' because attribute is already set`);
       } else if (taskOld.status !== 'open') {
-        throw new MethodNotAllowedException(
+        throw new ConflictException(
           `Cannot set 'acceptedOffer because task 'status' is not 'open'`,
         );
       }
@@ -166,19 +167,19 @@ export class TasksService extends MongoDataService {
     }
     if (data.status) {
       if (data.creatorRating || data.workerRating || data.acceptedOffer) {
-        throw new ConflictException(
+        throw new UnprocessableEntityException(
           `Cannot set "status" while setting creatorRating", ` +
           `"workerRating", or "acceptedOffer"`,
         );
       }
       if (!TASK_STATUSES.isValidNext(taskOld.status, data.status)) {
-        throw new MethodNotAllowedException(
+        throw new ConflictException(
           `Cannot change task to status '${data.status}' ` +
           `given current is '${taskOld.status}'`,
         );
       }
       if (data.status === 'in-progress' && taskOld.startDateTime > Date.now()) {
-        throw new MethodNotAllowedException(
+        throw new ConflictException(
           `Cannot set task to '${data.status}' ` +
           `before it's start time of '${taskOld.startDateTime}'`,
         );

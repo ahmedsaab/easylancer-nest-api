@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -70,7 +71,7 @@ export class OffersService extends MongoDataService {
         'Users cannot make an offer to their own tasks',
       );
     } else if (task.status !== 'open') {
-      throw new UnprocessableEntityException(
+      throw new ConflictException(
         `Task is closed for offers: status = ${task.status}`,
       );
     } else {
@@ -78,7 +79,7 @@ export class OffersService extends MongoDataService {
         await offer.save();
       } catch (error) {
         if (error.name === 'MongoError' && error.code === 11000) {
-          throw new UnprocessableEntityException(
+          throw new ConflictException(
             `Offer already exist for (user, task) => (${data.workerUser}, ${data.task})`,
           );
         }
@@ -94,7 +95,7 @@ export class OffersService extends MongoDataService {
     const offer = await this.getPopulate(id, ['task']) as any;
 
     if (offer.task.status !== 'open') {
-      throw new UnprocessableEntityException(
+      throw new ConflictException(
         `Task is closed for offers: status = ${offer.task.status}`,
       );
     }

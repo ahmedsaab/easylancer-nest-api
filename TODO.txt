@@ -16,26 +16,30 @@ v Request timeouts
 
 (v) Exception handling in Client API
 
-(5) User Authorization with JWT on Client API
+(v) User Authorization with JWT on Client API
 
-(6) Clean Kotlin code
+(v) User Authentication API
 
-(7) Clean Typescript code (types + remove unused imports + test code)
+(v) Access Control Authorization on Client API
 
-(8) User Authentication API
+(v) Clean Kotlin code
 
-(9) Payment API
+(9) FE mobile app beta
 
-(10) Accept Offer on Client API (think about payment)
+(8) Clean Typescript code (types + remove unused imports + test code)
 
-(11) Review endpoint on Client and Data APIs (think about payment)
+(10) Payment API
 
-(12) Cancel endpoint on Client and Data APIs (think about payment)
+(11) Accept Offer on Client API (think about payment)
 
-(13) Messages API (nodeJs websocket) how to integrate with Data API
+(12) Review endpoint on Client and Data APIs (think about payment)
 
-(14) Cron that changes the status of "accepted" due tasks to "in-progress" using the change status endpoint
+(13) Cancel endpoint on Client and Data APIs (think about payment)
 
-(15) Make payment API changes the status of a paid task from "open" to "accepted" using the assign offer data endpoint
+(14) Messages API (nodeJs websocket) how to integrate with Data API
+
+(15) Cron that changes the status of "accepted" due tasks to "in-progress" using the change status endpoint
+
+(16) Make payment API changes the status of a paid task from "open" to "accepted" using the assign offer data endpoint
 
 (16) Solve concurrency issue for updated entities

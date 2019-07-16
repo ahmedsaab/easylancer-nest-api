@@ -14,6 +14,8 @@ export class LoggingInterceptor implements NestInterceptor {
     const startTime = Date.now();
     const httpContext = context.switchToHttp();
     const request = httpContext.getRequest<IRequest>();
+    const response = httpContext.getResponse();
+
     const requestJson = {
       method: request.method,
       url: request.url,
@@ -25,24 +27,35 @@ export class LoggingInterceptor implements NestInterceptor {
       .handle()
       .pipe(
         tap((data: object) => {
-          console.log(JSON.stringify({
-            number: request.number,
-            request: requestJson,
-            resolved: data,
-            time: getExecutionTime(startTime),
-          }));
+          // TODO: This is for prod
+          // console.log(JSON.stringify({
+          //   number: request.number,
+          //   request: requestJson,
+          //   resolved: data,
+          //   time: getExecutionTime(startTime),
+          // }));
+          console.log(request.number + ' ' + response.statusCode + ' ' + requestJson.url);
         }),
         catchError((error: Error) => {
-          console.log(JSON.stringify({
-            number: request.number,
-            request: requestJson,
-            rejected: {
-              code: error instanceof HttpException ? error.getStatus() : 500,
-              message: error.message,
-              stack: error.stack,
-            },
-            time: getExecutionTime(startTime),
-          }));
+          // TODO: This is for prod
+          // console.log(JSON.stringify({
+          //   number: request.number,
+          //   request: requestJson,
+          //   rejected: {
+          //     code: error instanceof HttpException ? error.getStatus() : 500,
+          //     message: error.message,
+          //     stack: error.stack,
+          //   },
+          //   time: getExecutionTime(startTime),
+          // }));
+          console.error(
+            request.number + ' ' +
+            (error instanceof HttpException ? error.getStatus() : 500) + ' ' +
+            requestJson.url + ' ' +
+            (error instanceof HttpException ? error.message.message : error.message) + ' ' +
+            error.stack,
+          );
+
           throw error;
         }),
       );
