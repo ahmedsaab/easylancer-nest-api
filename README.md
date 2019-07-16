@@ -1,14 +1,14 @@
-## Easylancer Data API
+# Easylancer Data API
 
 The representational data api for the platform built with [Nest](https://github.com/nestjs/nest)
 
-## Installation
+### Installation
 
 ```bash
 $ npm install
 ```
 
-## Running the app
+### Running the app
 
 The config folder is located in `./config`
 
@@ -23,7 +23,7 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+### Test
 
 ```bash
 # unit tests
@@ -36,6 +36,6 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## License
+### License
 
   Nest is [MIT licensed](LICENSE).
