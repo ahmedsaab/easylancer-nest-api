@@ -4,12 +4,16 @@ export const PAYMENT_METHODS = {
 };
 
 export const TASK_TYPES = {
-  VALUES: ['type1', 'type2', 'type3', 'type4'],
-  DEFAULT: 'type1',
+  VALUES: [
+    'manicure', 'hair', 'computer', 'phone', 'bike', 'automotive',
+    'cleaning', 'renovation', 'electricity', 'plumping', 'translation',
+    'paper work',
+  ],
+  DEFAULT: 'manicure',
 };
 
 export const TASK_STATUSES = {
-  VALUES: ['open', 'accepted', 'in-progress', 'done', 'not-done',
+  VALUES: ['open', 'assigned', 'in-progress', 'done', 'not-done',
     'cancelled', 'removed', 'investigate'],
   DEFAULT: 'open',
   FINISHED_VALUES: ['done', 'not-done'],
@@ -17,8 +21,8 @@ export const TASK_STATUSES = {
   isValidNext: (oldStatus: string, newStatus: string): boolean => {
     switch (oldStatus) {
       case 'open':
-        return ['accepted', 'cancelled'].includes(newStatus);
-      case 'accepted':
+        return ['assigned', 'cancelled'].includes(newStatus);
+      case 'assigned':
         return ['in-progress', 'cancelled'].includes(newStatus);
       case 'in-progress':
         return ['done', 'not-done', 'investigate'].includes(newStatus);
@@ -29,8 +33,8 @@ export const TASK_STATUSES = {
 };
 
 export const TASK_CATEGORIES = {
-  VALUES: ['category1', 'category2', 'category3', 'category4'],
-  DEFAULT: 'category1',
+  VALUES: ['beauty', 'repair', 'home', 'expat'],
+  DEFAULT: 'beauty',
 };
 
 // TODO: Create interface UserSummary

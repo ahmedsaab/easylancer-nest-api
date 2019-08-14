@@ -160,7 +160,7 @@ export class TasksService extends MongoDataService {
         );
       }
 
-      taskNew.status = 'accepted';
+      taskNew.status = 'assigned';
       taskNew.price = offer.price;
       taskNew.paymentMethod = offer.paymentMethod;
       taskNew.workerUser = offer.workerUser;
@@ -194,7 +194,7 @@ export class TasksService extends MongoDataService {
           method: this.usersService.finishTask.bind(this.usersService),
           params: [taskNew.workerUser, taskNew.id],
         });
-      } else if (taskNew.status === 'accepted') {
+      } else if (taskNew.status === 'assigned') {
         actionQueue.queue({
           method: this.usersService.assignTask.bind(this.usersService),
           params: [taskNew.workerUser, taskNew.id],
