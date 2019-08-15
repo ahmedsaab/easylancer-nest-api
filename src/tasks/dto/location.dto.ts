@@ -1,11 +1,9 @@
-import { IsDefined, IsPositive } from 'class-validator';
+import { IsDefined } from 'class-validator';
 
 export class LocationDto {
-  @IsPositive()
   @IsDefined()
-  readonly lon: number;
+  readonly lng: number;
 
-  @IsPositive()
   @IsDefined()
   readonly lat: number;
 }
