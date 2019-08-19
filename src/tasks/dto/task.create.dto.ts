@@ -39,7 +39,7 @@ export class TaskCreateDto {
 
   @IsOptional()
   @IsArray()
-  @ValidateNested()
+  @IsString({each: true})
   readonly imagesUrls: [string];
 
   @IsOptional()
