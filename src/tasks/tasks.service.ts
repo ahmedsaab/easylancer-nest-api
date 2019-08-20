@@ -37,7 +37,8 @@ export class TasksService extends MongoDataService {
   }
 
   async findAll(): Promise<Task[]> {
-    return this.taskModel.find();
+    return this.taskModel.find()
+      .populate(this.refsToProps(['creatorUser']));
   }
 
   async removeAll(): Promise<any> {
@@ -56,7 +57,8 @@ export class TasksService extends MongoDataService {
   }
 
   async get(id: string): Promise<Task> {
-    const task: Task = await this.taskModel.findById(id);
+    const task: Task = await this.taskModel.findById(id)
+      .populate(this.refsToProps(['creatorUser']));
 
     if (!task) {
       throw new NotFoundException(`No task found with id ${id}`);
