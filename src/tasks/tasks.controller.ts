@@ -12,7 +12,7 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   // Only for development
-  @Get()
+  @Get('search')
   async findAll(): Promise<Task[]> {
     return this.tasksService.findAll();
   }
