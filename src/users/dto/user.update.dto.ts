@@ -63,7 +63,7 @@ export class UserUpdateDto {
   @ValidateIf(o => o.gender !== undefined)
   @IsDefined()
   @IsIn(['male', 'female', 'other'])
-  readonly gender: number;
+  readonly gender: string;
 
   @ValidateIf(o => o.settings !== undefined)
   @IsDefined()
