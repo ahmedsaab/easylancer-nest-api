@@ -57,8 +57,7 @@ export class TasksService extends MongoDataService {
   }
 
   async get(id: string): Promise<Task> {
-    const task: Task = await this.taskModel.findById(id)
-      .populate(this.refsToProps(['creatorUser']));
+    const task: Task = await this.taskModel.findById(id);
 
     if (!task) {
       throw new NotFoundException(`No task found with id ${id}`);
