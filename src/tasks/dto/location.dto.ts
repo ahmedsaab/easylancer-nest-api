@@ -1,9 +1,22 @@
-import { IsDefined } from 'class-validator';
+import { IsDefined, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { GeoDto } from './geo.dto';
 
 export class LocationDto {
   @IsDefined()
-  readonly lng: number;
+  @ValidateNested()
+  @Type(() => GeoDto)
+  readonly geo: GeoDto;
 
   @IsDefined()
-  readonly lat: number;
+  @IsString()
+  readonly address: string;
+
+  @IsDefined()
+  @IsString()
+  readonly city: string;
+
+  @IsDefined()
+  @IsString()
+  readonly country: string;
 }
