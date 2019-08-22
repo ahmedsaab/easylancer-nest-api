@@ -2,6 +2,7 @@ import { Document, Types } from 'mongoose';
 import { Badge } from './bade.interface';
 import { UserRating } from './user-rating.interface';
 import { Setting } from './setting.interface';
+import { Tag } from './tag.interface';
 
 // TODO: Change type of lastSeen to Date
 export interface User extends Document {
@@ -21,6 +22,7 @@ export interface User extends Document {
   createdAt: Date;
   gender: string;
   badges: Badge[];
+  tags: Tag[];
   ratings: UserRating;
   settings: Setting;
 }

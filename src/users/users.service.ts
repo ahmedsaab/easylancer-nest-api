@@ -98,6 +98,31 @@ export class UsersService {
     });
   }
 
+  async addTags(id: string, tags: [string]): Promise<void> {
+    try {
+      const user = await this.get(id);
+
+      tags.forEach(tag => {
+        const existentTagIndex = user.tags.findIndex(useTag =>
+          useTag.value === tag,
+        );
+
+        if (existentTagIndex !== -1) {
+          user.tags[existentTagIndex].count += 1;
+        } else {
+          user.tags.push({
+            value: tag,
+            count: 1,
+          });
+        }
+      });
+
+      await user.save();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   async getFinishedTasks(id, popRefs = []): Promise<Task[]> {
     return this.tasksService.find({
       workerUser: id,
@@ -171,7 +196,7 @@ export class UsersService {
     }));
   }
 
-  async update(id: string, dto: UserUpdateDto): Promise<User> {
-    return this.userModel.findOneAndUpdate({ _id: id }, dto, { new: true });
+  async update(id: string, data: Partial<User>): Promise<User> {
+    return this.userModel.findOneAndUpdate({ _id: id }, data, { new: true });
   }
 }

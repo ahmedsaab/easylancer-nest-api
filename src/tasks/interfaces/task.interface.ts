@@ -13,6 +13,7 @@ export interface Task extends Document {
   description: string;
   seenBy: [Types.ObjectId];
   location: Location;
+  tags: [string];
   createdAt: Date;
   creatorRating: TaskRating;
   workerRating: TaskRating;

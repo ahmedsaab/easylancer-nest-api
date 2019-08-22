@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { BadgeSchema } from './badge.schema';
+import { TagSchema } from './tag.schema';
 import { SettingSchema } from './setting.schema';
 import { UserRatingSchema } from './user-rating.schema';
 import { PhoneNumberUtil } from 'google-libphonenumber';
@@ -105,6 +106,7 @@ export const UserSchema = new mongoose.Schema({
     default: 'other',
   },
   badges: [BadgeSchema],
+  tags: [TagSchema],
   ratings: {
     type: UserRatingSchema,
     default: {},

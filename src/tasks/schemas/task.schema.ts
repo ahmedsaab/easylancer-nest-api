@@ -95,6 +95,7 @@ export const TaskSchema = new mongoose.Schema({
     enum: TASK_CATEGORIES.VALUES,
     required: true,
   },
+  tags: [String],
   paymentMethod: {
     type: String,
     enum: PAYMENT_METHODS.VALUES,

@@ -43,6 +43,11 @@ export class TaskCreateDto {
   readonly imagesUrls: [string];
 
   @IsOptional()
+  @IsArray()
+  @IsString({each: true})
+  readonly tags: [string];
+
+  @IsOptional()
   @IsDateString()
   readonly endDateTime: Date;
 

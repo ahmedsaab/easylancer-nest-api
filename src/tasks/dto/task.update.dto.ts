@@ -1,4 +1,4 @@
-import { IsString, IsOptional, ValidateNested, IsIn, IsDateString, IsPositive, IsInt, IsDefined, IsMongoId } from 'class-validator';
+import { IsString, IsOptional, ValidateNested, IsIn, IsDateString, IsPositive, IsInt, IsDefined, IsMongoId, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocationDto } from './location.dto';
 import { PAYMENT_METHODS, TASK_STATUSES } from '../../common/schema/constants';
@@ -52,4 +52,14 @@ export class TaskUpdateDto {
   @IsOptional()
   @IsIn(TASK_STATUSES.VALUES)
   status: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({each: true})
+  readonly imagesUrls: [string];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({each: true})
+  readonly tags: [string];
 }
