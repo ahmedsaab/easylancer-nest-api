@@ -13,14 +13,14 @@ import { UsersService } from '../users/users.service';
 import { OffersService } from '../offers/offers.service';
 import { TaskUpdateDto } from './dto/task.update.dto';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { USER_SUMMARY_PROP, TASK_STATUSES } from '../common/schema/constants';
+import { GENERAL_USER_SUMMARY_PROP, TASK_STATUSES } from '../common/schema/constants';
 import { TaskCreateDto } from './dto/task.create.dto';
 import { DeferredActionsQueue } from '../common/utils/helpers';
 
 // const UPDATE_OPTIONS = { new: true, runValidators: true };
 const POPULATION_PROPS = {
-  creatorUser: USER_SUMMARY_PROP,
-  workerUser: USER_SUMMARY_PROP,
+  creatorUser: GENERAL_USER_SUMMARY_PROP,
+  workerUser: GENERAL_USER_SUMMARY_PROP,
 };
 
 @Injectable()

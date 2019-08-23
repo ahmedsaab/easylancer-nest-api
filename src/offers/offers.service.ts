@@ -13,13 +13,13 @@ import { UsersService } from '../users/users.service';
 import { TasksService } from '../tasks/tasks.service';
 import { MongoError } from 'mongodb';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { TASK_SUMMARY_PROP, USER_SUMMARY_PROP } from '../common/schema/constants';
+import { TASK_SUMMARY_PROP, WORKER_USER_SUMMARY_PROP } from '../common/schema/constants';
 import { FindOfferQuery } from './dto/query/find-offer.query';
 import { OfferCreateDto } from './dto/offer.create.dto';
 import { OfferUpdateDto } from './dto/offer.update.dto';
 
 const POPULATION_PROPS = {
-  workerUser: USER_SUMMARY_PROP,
+  workerUser: WORKER_USER_SUMMARY_PROP,
   task: TASK_SUMMARY_PROP,
 };
 
@@ -56,7 +56,7 @@ export class OffersService extends MongoDataService {
   }
 
   async remove(id: string): Promise<any> {
-    return await this.offerModel.deleteOne({ _id: id });
+    return this.offerModel.deleteOne({ _id: id });
   }
 
   async create(data: OfferCreateDto): Promise<Offer> {

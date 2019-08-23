@@ -38,8 +38,12 @@ export const TASK_CATEGORIES = {
 };
 
 // TODO: Create interface UserSummary
-export const USER_SUMMARY_PROP =
+export const WORKER_USER_SUMMARY_PROP =
   'firstName lastName likes dislikes imageUrl badges tags isApproved';
+
+// TODO: Create interface UserSummary
+export const GENERAL_USER_SUMMARY_PROP =
+  'firstName lastName likes dislikes imageUrl badges isApproved';
 
 // TODO: Create interface TaskSummary
 export const TASK_SUMMARY_PROP =

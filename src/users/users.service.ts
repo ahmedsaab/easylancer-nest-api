@@ -103,8 +103,8 @@ export class UsersService {
       const user = await this.get(id);
 
       tags.forEach(tag => {
-        const existentTagIndex = user.tags.findIndex(useTag =>
-          useTag.value === tag,
+        const existentTagIndex = user.tags.findIndex(userTag =>
+          userTag.value === tag,
         );
 
         if (existentTagIndex !== -1) {
