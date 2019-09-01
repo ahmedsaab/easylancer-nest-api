@@ -43,7 +43,7 @@ export const TaskSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-    maxlength: 40,
+    maxlength: 80,
   },
   description: {
     type: String,

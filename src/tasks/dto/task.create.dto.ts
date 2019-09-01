@@ -1,4 +1,16 @@
-import { IsArray, IsDateString, IsDefined, IsIn, IsInt, IsNumber, IsOptional, IsPositive, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsDefined,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_TYPES } from '../../common/schema/constants';
 import { LocationDto } from './location.dto';
@@ -26,6 +38,7 @@ export class TaskCreateDto {
 
   @IsDefined()
   @IsString()
+  @MaxLength(80)
   readonly title: string;
 
   @IsDefined()

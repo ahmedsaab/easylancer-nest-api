@@ -62,6 +62,16 @@ export class UsersService {
     });
   }
 
+  withdrawFromTask(id: string, taskId: string): void {
+    this.userModel.findOneAndUpdate({ _id: id }, {
+      $pull: {
+        appliedTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
   createTask(id: string, taskId: string): void {
     this.userModel.findOneAndUpdate({ _id: id }, {
       $addToSet: {

@@ -56,7 +56,25 @@ export class OffersService extends MongoDataService {
   }
 
   async remove(id: string): Promise<any> {
-    return this.offerModel.deleteOne({ _id: id });
+    const [ offer, isAccepted ] = await Promise.all([
+      this.get(id),
+      this.tasksService.find({ acceptedOffer: id })
+        .then(task => task.length > 0),
+    ]);
+
+    if (isAccepted) {
+      throw new ConflictException(
+        `Offer cannot be deleted because it is accepted`,
+      );
+    }
+
+    await this.offerModel.deleteOne({ _id: id });
+    this.usersService.withdrawFromTask(
+      offer.workerUser.toHexString(),
+      offer.task.toHexString(),
+    );
+
+    return offer;
   }
 
   async create(data: OfferCreateDto): Promise<Offer> {
