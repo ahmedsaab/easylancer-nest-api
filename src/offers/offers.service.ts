@@ -129,7 +129,29 @@ export class OffersService extends MongoDataService {
       .populate(this.refsToProps(refs));
   }
 
-  async removeMany(query?: FindOfferQuery) {
-    return this.offerModel.deleteMany(query);
+  async removeMany(query?: FindOfferQuery): Promise<Offer[]> {
+    const offers = await this.offerModel.find(query);
+    const cannotDelete = await this.tasksService.find({
+      acceptedOffer: {
+        $in: offers.map(offer => offer.id),
+      },
+    }).then(tasks => tasks.length > 0);
+
+    if (cannotDelete) {
+      throw new ConflictException(
+        `Offers cannot be deleted because some are already accepted`,
+      );
+    }
+
+    await this.offerModel.deleteMany(query);
+
+    Promise.all(offers.map(offer => (
+      this.usersService.withdrawFromTask(
+        offer.workerUser.toHexString(),
+        offer.task.toHexString(),
+      )
+    ))).catch(error => console.error(error));
+
+    return offers;
   }
 }
