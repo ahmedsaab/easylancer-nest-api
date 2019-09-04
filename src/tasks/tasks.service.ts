@@ -107,7 +107,7 @@ export class TasksService extends MongoDataService {
       (
         data.price || data.endDateTime || data.startDateTime ||
         data.description || data.paymentMethod || data.title ||
-        data.location
+        data.location || data.tags || data.imagesUrls
       ) && taskOld.status !== 'open'
     ) {
         throw new ConflictException(
@@ -148,6 +148,9 @@ export class TasksService extends MongoDataService {
     }
     if (data.location) {
       taskNew.location.set(data.location);
+      if (data.location.geo) {
+        taskNew.location.geo.set(data.location.geo);
+      }
     }
     if (data.acceptedOffer) {
       const offer = await this.offersService.get(data.acceptedOffer);

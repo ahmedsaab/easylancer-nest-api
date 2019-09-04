@@ -1,6 +1,6 @@
 import { Document } from 'mongoose';
 
-interface Geo {
+interface Geo extends Document  {
   lat: number;
   lng: number;
 }
