@@ -1,7 +1,8 @@
 import { Document } from 'mongoose';
 
 export interface TaskRating extends Document {
-  criteria: Criteria;
+  createdAt: Date;
+  rating: number;
   description: string;
   like: boolean;
 }

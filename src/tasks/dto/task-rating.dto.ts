@@ -1,12 +1,11 @@
-import { IsBoolean, IsDefined, MaxLength, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { TaskRatingCriteriaDto } from './task-rating-criteria.dto';
+import { IsBoolean, IsDefined, IsInt, IsPositive, Max, MaxLength, Min } from 'class-validator';
 
 export class TaskRatingDto {
   @IsDefined()
-  @ValidateNested()
-  @Type(() => TaskRatingCriteriaDto)
-  readonly criteria: TaskRatingCriteriaDto;
+  @IsInt()
+  @Max(5)
+  @Min(0)
+  readonly rating: number;
 
   @IsDefined()
   @IsBoolean()

@@ -14,10 +14,10 @@ export const TASK_TYPES = {
 
 export const TASK_STATUSES = {
   VALUES: ['open', 'assigned', 'in-progress', 'done', 'not-done',
-    'cancelled', 'removed', 'investigate'],
+    'cancelled', 'removed', 'pending-review', 'investigate'],
   DEFAULT: 'open',
   FINISHED_VALUES: ['done', 'not-done'],
-  REVIEWABLE_VALUES: ['in-progress'],
+  REVIEWABLE_VALUES: ['in-progress', 'pending-review'],
   isValidNext: (oldStatus: string, newStatus: string): boolean => {
     switch (oldStatus) {
       case 'open':
@@ -25,6 +25,8 @@ export const TASK_STATUSES = {
       case 'assigned':
         return ['in-progress', 'cancelled'].includes(newStatus);
       case 'in-progress':
+        return ['pending-review'].includes(newStatus);
+      case 'pending-review':
         return ['done', 'not-done', 'investigate'].includes(newStatus);
       default:
         return false;

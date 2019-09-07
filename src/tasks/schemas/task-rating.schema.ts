@@ -1,25 +1,17 @@
 import * as mongoose from 'mongoose';
 
 export const TaskRatingSchema = new mongoose.Schema({
-  criteria: {
-    type: {
-      measure1: {
-        type: Number,
-        min: 0,
-        max: 5,
-        validate : Number.isInteger,
-        default: 0,
-        required: true,
-      },
-      measure2: {
-        type: Number,
-        min: 0,
-        max: 5,
-        validate : Number.isInteger,
-        default: 0,
-        required: true,
-      },
-    },
+  createdAt: {
+    default: new Date(),
+    set() { return this.createdAt; },
+    type: Date,
+  },
+  rating: {
+    type: Number,
+    min: 0,
+    max: 5,
+    validate : Number.isInteger,
+    default: 0,
     required: true,
   },
   description: {

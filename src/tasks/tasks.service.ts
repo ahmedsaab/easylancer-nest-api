@@ -134,7 +134,7 @@ export class TasksService extends MongoDataService {
         const creatorVote = taskNew.creatorRating && taskNew.creatorRating.like;
         const workerVote = taskNew.workerRating && taskNew.workerRating.like;
 
-        if (creatorVote === true) {
+        if (creatorVote === true && workerVote === true) {
           taskNew.status = 'done';
         } else if (creatorVote === false && workerVote === false) {
           taskNew.status = 'not-done';
@@ -143,6 +143,8 @@ export class TasksService extends MongoDataService {
           creatorVote !== workerVote
         ) {
           taskNew.status = 'investigate';
+        } else {
+          taskNew.status = 'pending-review';
         }
       }
     }
