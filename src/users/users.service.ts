@@ -1,8 +1,7 @@
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { UserUpdateDto } from './dto/user.update.dto';
 import { UserCreateDto } from './dto/user.create.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from './interfaces/user.interface';
 import { Task } from '../tasks/interfaces/task.interface';
 import { TasksService } from '../tasks/tasks.service';
@@ -11,6 +10,7 @@ import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { TASK_STATUSES } from '../common/schema/constants';
 import { FindUserQuery } from './dto/query/find-user.query';
+import { UserReview } from './interfaces/user-review.interface';
 
 @Injectable()
 export class UsersService {
@@ -128,6 +128,24 @@ export class UsersService {
       });
 
       await user.save();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async addReview(id: string, review: UserReview) {
+    try {
+      const key = review.like ? 'likes' : 'dislikes';
+      const rating = review.like ? {
+        'ratings.count': 1,
+        'ratings.value': review.rating,
+      } : {};
+      await this.userModel.findByIdAndUpdate(id, {
+        $inc: {
+          [key]: 1,
+          ...rating,
+        },
+      });
     } catch (error) {
       console.error(error);
     }

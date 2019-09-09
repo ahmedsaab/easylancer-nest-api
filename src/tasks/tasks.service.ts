@@ -126,9 +126,23 @@ export class TasksService extends MongoDataService {
       } else {
         if (data.creatorRating) {
           taskNew.creatorRating.set(data.creatorRating);
+          actionQueue.queue({
+            method: this.usersService.addReview.bind(this.usersService),
+            params: [taskNew.workerUser, {
+              like: data.creatorRating.like,
+              rating: data.creatorRating.rating,
+            }],
+          });
         }
         if (data.workerRating) {
           taskNew.workerRating.set(data.workerRating);
+          actionQueue.queue({
+            method: this.usersService.addReview.bind(this.usersService),
+            params: [taskNew.creatorUser, {
+              like: data.workerRating.like,
+              rating: data.workerRating.rating,
+            }],
+          });
         }
 
         const creatorVote = taskNew.creatorRating && taskNew.creatorRating.like;

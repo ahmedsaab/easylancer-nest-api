@@ -41,7 +41,7 @@ export const TASK_CATEGORIES = {
 
 // TODO: Create interface UserSummary
 export const WORKER_USER_SUMMARY_PROP =
-  'firstName lastName likes dislikes imageUrl badges tags isApproved';
+  'firstName lastName likes dislikes ratings imageUrl badges tags isApproved';
 
 // TODO: Create interface UserSummary
 export const GENERAL_USER_SUMMARY_PROP =

@@ -1,17 +1,15 @@
 import * as mongoose from 'mongoose';
 
 export const UserRatingSchema = new mongoose.Schema({
-  measure1: {
+  value: {
     type: Number,
     min: 0,
-    max: 5,
     validate : Number.isInteger,
     default: 0,
   },
-  measure2: {
+  count: {
     type: Number,
     min: 0,
-    max: 5,
     validate : Number.isInteger,
     default: 0,
   },
