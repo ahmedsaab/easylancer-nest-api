@@ -23,3 +23,7 @@ export interface Task extends Document {
   paymentMethod: string;
   imagesUrls: string[];
 }
+
+export interface MyCreatedTask extends Omit<Task, keyof Document> {
+  offers?: number;
+}

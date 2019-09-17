@@ -16,6 +16,7 @@ import { MongoDataService } from '../common/providers/mongo-data.service';
 import { GENERAL_USER_SUMMARY_PROP, TASK_STATUSES } from '../common/schema/constants';
 import { TaskCreateDto } from './dto/task.create.dto';
 import { DeferredActionsQueue } from '../common/utils/helpers';
+import { TaskSchema, TaskSchemaDefinition } from './schemas/task.schema';
 
 // const UPDATE_OPTIONS = { new: true, runValidators: true };
 const POPULATION_PROPS = {
@@ -24,29 +25,29 @@ const POPULATION_PROPS = {
 };
 
 @Injectable()
-export class TasksService extends MongoDataService {
+export class TasksService extends MongoDataService<Task> {
   constructor(
     @InjectModel('Task')
-    private readonly taskModel: Model<Task>,
+    protected readonly MODEL: Model<Task>,
     @Inject(forwardRef(() => OffersService))
     private readonly offersService: OffersService,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {
-    super(POPULATION_PROPS);
+    super(POPULATION_PROPS, TaskSchema, TaskSchemaDefinition, MODEL);
   }
 
   async findAll(): Promise<Task[]> {
-    return this.taskModel.find()
+    return this.MODEL.find()
       .populate(this.refsToProps(['creatorUser']));
   }
 
   async removeAll(): Promise<any> {
-    return this.taskModel.deleteMany({});
+    return this.MODEL.deleteMany({});
   }
 
   async getPopulate(id: string): Promise<Task> {
-    const task = await this.taskModel.findById(id)
+    const task = await this.MODEL.findById(id)
       .populate(this.DEF_PROP);
 
     if (!task) {
@@ -57,7 +58,7 @@ export class TasksService extends MongoDataService {
   }
 
   async get(id: string): Promise<Task> {
-    const task: Task = await this.taskModel.findById(id);
+    const task: Task = await this.MODEL.findById(id);
 
     if (!task) {
       throw new NotFoundException(`No task found with id ${id}`);
@@ -67,11 +68,11 @@ export class TasksService extends MongoDataService {
   }
 
   async remove(id: string): Promise<any> {
-    return this.taskModel.deleteOne({ _id: id });
+    return this.MODEL.deleteOne({ _id: id });
   }
 
   async create(data: TaskCreateDto): Promise<Task> {
-    const task = new this.taskModel(data);
+    const task = new this.MODEL(data);
 
     await this.usersService.get(data.creatorUser);
     await task.save();
@@ -83,15 +84,15 @@ export class TasksService extends MongoDataService {
   async findByIds(ids): Promise<Task[]> {
     const objectIds = ids.map(id => new Types.ObjectId(id));
 
-    return this.taskModel.find({ _id: { $in: objectIds } });
+    return this.MODEL.find({ _id: { $in: objectIds } });
   }
 
-  async find(query, refs?: string[]): Promise<Task[]> {
+  async find(query, refs?: string[], options?: any | null): Promise<Task[]> {
     if (refs) {
-      return this.taskModel.find(query)
+      return this.MODEL.find(query, null, options)
         .populate(this.refsToProps(refs));
     } else {
-      return this.taskModel.find(query);
+      return this.MODEL.find(query);
     }
   }
 
@@ -108,10 +109,10 @@ export class TasksService extends MongoDataService {
         data.price || data.endDateTime || data.startDateTime ||
         data.description || data.paymentMethod || data.title ||
         data.location || data.tags || data.imagesUrls
-      ) && taskOld.status !== 'open'
+      ) && taskOld.status !== 'OPEN'
     ) {
         throw new ConflictException(
-          `Cannot update these attributes because task 'status' is not 'open'`,
+          `Cannot update these attributes because task 'status' is not 'OPEN'`,
         );
     }
     if (data.creatorRating || data.workerRating) {
@@ -149,16 +150,16 @@ export class TasksService extends MongoDataService {
         const workerVote = taskNew.workerRating && taskNew.workerRating.like;
 
         if (creatorVote === true && workerVote === true) {
-          taskNew.status = 'done';
+          taskNew.status = 'DONE';
         } else if (creatorVote === false && workerVote === false) {
-          taskNew.status = 'not-done';
+          taskNew.status = 'NOT_DONE';
         } else if (
           taskNew.creatorRating && taskNew.workerRating &&
           creatorVote !== workerVote
         ) {
-          taskNew.status = 'investigate';
+          taskNew.status = 'INVESTIGATE';
         } else {
-          taskNew.status = 'pending-review';
+          taskNew.status = 'PENDING_REVIEW';
         }
       }
     }
@@ -174,13 +175,13 @@ export class TasksService extends MongoDataService {
       if (taskOld.acceptedOffer) {
         throw new ConflictException(
           `Cannot set 'acceptedOffer' because attribute is already set`);
-      } else if (taskOld.status !== 'open') {
+      } else if (taskOld.status !== 'OPEN') {
         throw new ConflictException(
-          `Cannot set 'acceptedOffer because task 'status' is not 'open'`,
+          `Cannot set 'acceptedOffer because task 'status' is not 'OPEN'`,
         );
       }
 
-      taskNew.status = 'assigned';
+      taskNew.status = 'ASSIGNED';
       taskNew.price = offer.price;
       taskNew.paymentMethod = offer.paymentMethod;
       taskNew.workerUser = offer.workerUser;
@@ -198,7 +199,7 @@ export class TasksService extends MongoDataService {
           `given current is '${taskOld.status}'`,
         );
       }
-      if (data.status === 'in-progress' && taskOld.startDateTime > Date.now()) {
+      if (data.status === 'IN_PROGRESS' && taskOld.startDateTime > Date.now()) {
         throw new ConflictException(
           `Cannot set task to '${data.status}' ` +
           `before it's start time of '${taskOld.startDateTime}'`,
@@ -218,7 +219,7 @@ export class TasksService extends MongoDataService {
           method: this.usersService.addTags.bind(this.usersService),
           params: [taskNew.workerUser, taskNew.tags],
         });
-      } else if (taskNew.status === 'assigned') {
+      } else if (taskNew.status === 'ASSIGNED') {
         actionQueue.queue({
           method: this.usersService.assignTask.bind(this.usersService),
           params: [taskNew.workerUser, taskNew.id],
@@ -233,7 +234,7 @@ export class TasksService extends MongoDataService {
   }
 
   async seenByUser(id: string, userId: string): Promise<Partial<Task>> {
-    const user = await this.taskModel.findOneAndUpdate({ _id: id }, {
+    const user = await this.MODEL.findOneAndUpdate({ _id: id }, {
       $addToSet: {
         seenBy: userId,
       },

@@ -13,21 +13,21 @@ export const TASK_TYPES = {
 };
 
 export const TASK_STATUSES = {
-  VALUES: ['open', 'assigned', 'in-progress', 'done', 'not-done',
-    'cancelled', 'removed', 'pending-review', 'investigate'],
-  DEFAULT: 'open',
-  FINISHED_VALUES: ['done', 'not-done'],
-  REVIEWABLE_VALUES: ['in-progress', 'pending-review'],
+  VALUES: ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'DONE', 'NOT_DONE',
+    'CANCELLED', 'REMOVED', 'PENDING_REVIEW', 'INVESTIGATE'],
+  DEFAULT: 'OPEN',
+  FINISHED_VALUES: ['DONE', 'NOT_DONE'],
+  REVIEWABLE_VALUES: ['IN_PROGRESS', 'PENDING_REVIEW'],
   isValidNext: (oldStatus: string, newStatus: string): boolean => {
     switch (oldStatus) {
-      case 'open':
-        return ['assigned', 'cancelled'].includes(newStatus);
-      case 'assigned':
-        return ['in-progress', 'cancelled'].includes(newStatus);
-      case 'in-progress':
-        return ['pending-review'].includes(newStatus);
-      case 'pending-review':
-        return ['done', 'not-done', 'investigate'].includes(newStatus);
+      case 'OPEN':
+        return ['ASSIGNED', 'CANCELLED'].includes(newStatus);
+      case 'ASSIGNED':
+        return ['IN_PROGRESS', 'CANCELLED'].includes(newStatus);
+      case 'IN_PROGRESS':
+        return ['PENDING_REVIEW'].includes(newStatus);
+      case 'PENDING_REVIEW':
+        return ['DONE', 'NOT_DONE', 'INVESTIGATE'].includes(newStatus);
       default:
         return false;
     }
@@ -37,6 +37,11 @@ export const TASK_STATUSES = {
 export const TASK_CATEGORIES = {
   VALUES: ['beauty', 'repair', 'home', 'expat'],
   DEFAULT: 'beauty',
+};
+
+export const USER_SETTINGS_ROLES = {
+  VALUES: ['WORKER', 'OWNER'],
+  DEFAULT: 'OWNER',
 };
 
 // TODO: Create interface UserSummary

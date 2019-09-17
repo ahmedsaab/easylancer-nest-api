@@ -3,7 +3,9 @@ import { PAYMENT_METHODS } from '../../common/schema/constants';
 
 const { ObjectId } = mongoose.Schema.Types;
 
-export const OfferSchema = new mongoose.Schema({
+export const OffersCollectionName = 'offers';
+
+export const OfferSchemaDefinition = {
   workerUser: {
     type: ObjectId,
     ref: 'User',
@@ -45,7 +47,14 @@ export const OfferSchema = new mongoose.Schema({
     required: false,
     default: false,
   },
-}, { versionKey: false });
+};
+
+export const OfferSchema = new mongoose.Schema(
+  OfferSchemaDefinition, {
+    versionKey: false,
+    collection: OffersCollectionName,
+  },
+);
 
 OfferSchema.index({
   workerUser: 1,

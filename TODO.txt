@@ -38,7 +38,7 @@ v Request timeouts
 
 (14) Messages API (nodeJs websocket) how to integrate with Data API
 
-(15) Cron that changes the status of "accepted" due tasks to "in-progress" using the change status endpoint
+(15) Cron that changes the status of "accepted" due tasks to "IN_PROGRESS" using the change status endpoint
 
 (16) Make payment API changes the status of a paid task from "open" to "accepted" using the assign offer data endpoint
 

@@ -26,7 +26,8 @@
     "@nestjs/passport": "^6.0.0",
     "@nestjs/platform-express": "^6.1.0",
     "@types/google-libphonenumber": "^7.4.17",
-    "@types/mongoose": "^5.3.25",
+    "@types/mongodb": "^3.3.1",
+    "@types/mongoose": "^5.5.17",
     "class-transformer": "^0.2.0",
     "class-validator": "^0.9.1",
     "dotenv": "^7.0.0",
@@ -35,6 +36,7 @@
     "json-beautify": "^1.1.0",
     "mongodb": "^3.2.2",
     "mongoose": "^5.4.20",
+    "nest-schedule": "^0.6.3",
     "passport": "^0.4.0",
     "passport-http-bearer": "^1.0.1",
     "reflect-metadata": "^0.1.12",
@@ -58,7 +60,7 @@
     "ts-node": "^7.0.1",
     "tsconfig-paths": "^3.7.0",
     "tslint": "5.12.1",
-    "typescript": "^3.2.4"
+    "typescript": "^3.6.3"
   },
   "jest": {
     "moduleFileExtensions": [

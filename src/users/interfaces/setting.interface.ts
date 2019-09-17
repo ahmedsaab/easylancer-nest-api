@@ -1,4 +1,4 @@
 export interface Setting {
-  setting1: number;
+  role: string;
   setting2: number;
 }

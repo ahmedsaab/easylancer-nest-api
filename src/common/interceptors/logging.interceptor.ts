@@ -29,6 +29,7 @@ export class LoggingInterceptor implements NestInterceptor {
         tap((data: object) => {
           // TODO: This is for prod
           // console.log(JSON.stringify({
+          //   type: 'http',
           //   number: request.number,
           //   request: requestJson,
           //   resolved: data,
@@ -39,6 +40,7 @@ export class LoggingInterceptor implements NestInterceptor {
         catchError((error: Error) => {
           // TODO: This is for prod
           // console.log(JSON.stringify({
+          //   type: 'http',
           //   number: request.number,
           //   request: requestJson,
           //   rejected: {

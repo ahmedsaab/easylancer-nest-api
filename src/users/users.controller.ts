@@ -3,12 +3,15 @@ import { UserCreateDto } from './dto/user.create.dto';
 import { UserUpdateDto } from './dto/user.update.dto';
 import { UsersService } from './users.service';
 import { User } from './interfaces/user.interface';
-import { Task } from '../tasks/interfaces/task.interface';
+import { MyCreatedTask, Task } from '../tasks/interfaces/task.interface';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { delay } from '../common/utils/dev-tools';
 import { FindUserQuery } from './dto/query/find-user.query';
+import { SearchDto } from '../common/dto/search.dto';
+import { TaskSearchDto } from '../tasks/dto/search/task.search.dto';
+import { Pagination } from '../common/interfaces/pagination.interface';
 
 @Controller('users')
 export class UsersController {
@@ -79,18 +82,20 @@ export class UsersController {
     return this.usersService.removeBadge(id, badgeName);
   }
 
-  @Get(':id/tasks/finished')
-  async getAcceptedTasks(
+  @Post(':id/tasks/applied')
+  async searchAppliedTasks(
     @Param('id') id: string,
-  ): Promise<Task[]> {
-    return this.usersService.getFinishedTasks(id);
+    @Body() search: TaskSearchDto,
+  ): Promise<Pagination<Task>> {
+    return this.usersService.findAppliedTasks(id, search);
   }
 
-  @Get(':id/tasks/created')
+  @Post(':id/tasks/created')
   async getCreatedTasks(
     @Param('id') id: string,
-  ): Promise<Task[]> {
-    return this.usersService.getCreatedTasks(id);
+    @Body() search: TaskSearchDto,
+  ): Promise<Pagination<MyCreatedTask>> {
+    return this.usersService.getCreatedTasks(id, search);
   }
 
   @Get(':id/tasks')

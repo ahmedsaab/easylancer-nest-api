@@ -1,11 +1,10 @@
-import { IsInt, IsNotEmpty, IsOptional, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsOptional, Max, Min } from 'class-validator';
+import { USER_SETTINGS_ROLES } from '../../common/schema/constants';
 
 export class UserUpdateSettingDto {
-  @IsInt()
-  @IsNotEmpty()
-  @Max(5)
+  @IsIn(USER_SETTINGS_ROLES.VALUES)
   @IsOptional()
-  readonly setting1: number;
+  readonly role: string;
 
   @IsInt()
   @IsNotEmpty()

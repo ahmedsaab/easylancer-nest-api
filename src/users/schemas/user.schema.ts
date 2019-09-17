@@ -7,7 +7,9 @@ import { PhoneNumberUtil } from 'google-libphonenumber';
 
 const { ObjectId } = mongoose.Schema.Types;
 
-export const UserSchema = new mongoose.Schema({
+export const UsersCollectionName = 'users';
+
+export const UserSchemaDefinition = {
   about: {
     type: String,
     default: '',
@@ -115,4 +117,11 @@ export const UserSchema = new mongoose.Schema({
     type: SettingSchema,
     default: {},
   },
-}, { versionKey: false });
+};
+
+export const UserSchema = new mongoose.Schema(
+  UserSchemaDefinition, {
+    versionKey: false,
+    collection: UsersCollectionName,
+  },
+);

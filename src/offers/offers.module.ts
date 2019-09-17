@@ -11,7 +11,7 @@ import { TasksModule } from '../tasks/tasks.module';
     MongooseModule.forFeature([
       { name: 'Offer', schema: OfferSchema },
     ]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => TasksModule),
   ],
   controllers: [OffersController],
