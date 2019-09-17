@@ -5,6 +5,7 @@ import { FilterQuery, QuerySelector } from 'mongodb';
 import { ObjectId } from 'mongodb';
 import { Filter } from '../interfaces/filter.interface';
 import { Query } from '../interfaces/query.interface';
+import { SCHEMAS } from '../schema/schemas';
 
 export class MongoDataService<T extends Document> {
   protected readonly DEF_PROP: any[];
@@ -88,10 +89,10 @@ export class MongoDataService<T extends Document> {
       { $match: match },
     ];
 
-    props.forEach(prop => {
+    props.filter(prop => !prop.path.includes('.')).forEach(prop => {
       dataPipeLine.push({
         $lookup: {
-          from: this.SCHEMA_DEFINITION[prop.path].schema,
+          from: SCHEMAS[this.SCHEMA_DEFINITION[prop.path].ref].name,
           localField: prop.path,
           foreignField: '_id',
           as: prop.path,
@@ -104,7 +105,7 @@ export class MongoDataService<T extends Document> {
       });
       countPipeLine.push({
         $lookup: {
-          from: this.SCHEMA_DEFINITION[prop.path].schema,
+          from: SCHEMAS[this.SCHEMA_DEFINITION[prop.path].ref].name,
           localField: prop.path,
           foreignField: '_id',
           as: prop.path,
@@ -116,6 +117,24 @@ export class MongoDataService<T extends Document> {
       dataPipeLine.push({ $match: matchPopulated });
       countPipeLine.push({ $match: matchPopulated });
     }
+
+    props.filter(prop => prop.path.includes('.')).forEach(prop => {
+      const [path, subPath] = prop.path.split('.');
+
+      dataPipeLine.push({
+        $lookup: {
+          from: SCHEMAS[SCHEMAS[this.SCHEMA_DEFINITION[path].ref].definition[subPath].ref].name,
+          localField: prop.path,
+          foreignField: '_id',
+          as: prop.path,
+        },
+      }, {
+        $unwind: {
+          path: `$${prop.path}`,
+          preserveNullAndEmptyArrays: true,
+        },
+      });
+    });
 
     Object.entries(this.SCHEMA.paths).forEach(([path, value]) => {
       // This is because of missing options property

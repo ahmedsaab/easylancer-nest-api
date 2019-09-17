@@ -181,7 +181,7 @@ export class UsersService extends MongoDataService<User> {
     );
     const offersPagination = (
       await this.offersService.search(match,
-        [ 'task' ],
+        [ 'task' , 'task.creatorUser'],
         search.pageSize,
         search.pageNo,
         matchPopulated,

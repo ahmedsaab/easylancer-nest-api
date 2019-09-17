@@ -13,7 +13,7 @@ import { UsersService } from '../users/users.service';
 import { TasksService } from '../tasks/tasks.service';
 import { MongoError, ObjectId } from 'mongodb';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { TASK_SUMMARY_PROP, WORKER_USER_SUMMARY_PROP } from '../common/schema/constants';
+import { GENERAL_USER_SUMMARY_PROP, TASK_SUMMARY_PROP, WORKER_USER_SUMMARY_PROP } from '../common/schema/constants';
 import { FindOfferQuery } from './dto/query/find-offer.query';
 import { OfferCreateDto } from './dto/offer.create.dto';
 import { OfferUpdateDto } from './dto/offer.update.dto';
@@ -21,8 +21,9 @@ import { OfferSchema, OfferSchemaDefinition } from './schemas/offer.schema';
 import { TaskOffers } from './interfaces/task-offers.interface';
 
 const POPULATION_PROPS = {
-  workerUser: WORKER_USER_SUMMARY_PROP,
-  task: TASK_SUMMARY_PROP,
+  'workerUser': WORKER_USER_SUMMARY_PROP,
+  'task': TASK_SUMMARY_PROP,
+  'task.creatorUser': GENERAL_USER_SUMMARY_PROP,
 };
 
 @Injectable()

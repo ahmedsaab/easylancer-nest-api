@@ -1,7 +1,5 @@
 import * as mongoose from 'mongoose';
 import { PAYMENT_METHODS } from '../../common/schema/constants';
-import { UsersCollectionName } from '../../users/schemas/user.schema';
-import { TasksCollectionName } from '../../tasks/schemas/task.schema';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -13,14 +11,12 @@ export const OfferSchemaDefinition = {
     ref: 'User',
     unique: false,
     required: true,
-    schema: UsersCollectionName,
   },
   task: {
     type: ObjectId,
     ref: 'Task',
     unique: false,
     required: true,
-    schema: TasksCollectionName,
   },
   paymentMethod: {
     required: false,

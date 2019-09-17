@@ -4,8 +4,6 @@ import { TaskRatingSchema } from './task-rating.schema';
 import { BadRequestException } from '@nestjs/common';
 import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_STATUSES, TASK_TYPES } from '../../common/schema/constants';
 import { Task } from '../interfaces/task.interface';
-import { OffersCollectionName } from '../../offers/schemas/offer.schema';
-import { UsersCollectionName } from '../../users/schemas/user.schema';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -17,19 +15,16 @@ export const TaskSchemaDefinition = {
     ref: 'User',
     unique: false,
     required: true,
-    schema: UsersCollectionName,
   },
   workerUser: {
     type: ObjectId,
     ref: 'User',
     unique: false,
     default: null,
-    schema: UsersCollectionName,
   },
   acceptedOffer: {
     type: ObjectId,
     ref: 'Offer',
-    schema: OffersCollectionName,
     index: {
       unique: true,
       partialFilterExpression: {
