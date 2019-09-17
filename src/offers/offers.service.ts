@@ -26,10 +26,10 @@ const POPULATION_PROPS = {
 };
 
 @Injectable()
-export class OffersService extends MongoDataService<Offer> {
+export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
   constructor(
     @InjectModel('Offer')
-    protected readonly MODEL: Model<Offer>,
+    protected readonly MODEL: Model<Offer<ObjectId, ObjectId>>,
     @Inject(forwardRef(() => TasksService))
     private readonly tasksService: TasksService,
     @Inject(forwardRef(() => UsersService))
@@ -38,7 +38,7 @@ export class OffersService extends MongoDataService<Offer> {
     super(POPULATION_PROPS, OfferSchema, OfferSchemaDefinition, MODEL);
   }
 
-  async get(id: string): Promise<Offer> {
+  async get(id: string): Promise<Offer<ObjectId, ObjectId>> {
     const offer = await this.MODEL.findById(id);
 
     if (!offer) {
@@ -47,7 +47,7 @@ export class OffersService extends MongoDataService<Offer> {
     return offer;
   }
 
-  async getPopulate(id: string, refs: string[]): Promise<Offer> {
+  async getPopulate(id: string, refs: string[]): Promise<Offer<ObjectId, ObjectId>> {
     const offer = await this.MODEL.findById(id)
       .populate(refs.length ? this.refsToProps(refs) : this.DEF_PROP);
 
@@ -80,7 +80,7 @@ export class OffersService extends MongoDataService<Offer> {
     return offer;
   }
 
-  async create(data: OfferCreateDto): Promise<Offer> {
+  async create(data: OfferCreateDto): Promise<Offer<ObjectId, ObjectId>> {
     const offer = new this.MODEL(data);
     const [ task ] = await Promise.all([
       this.tasksService.get(data.task),
@@ -112,7 +112,7 @@ export class OffersService extends MongoDataService<Offer> {
     }
   }
 
-  async update(id: string, data: OfferUpdateDto): Promise<Offer> {
+  async update(id: string, data: OfferUpdateDto): Promise<Offer<ObjectId, ObjectId>> {
     const offer = await this.getPopulate(id, ['task']) as any;
 
     if (offer.task.status !== 'OPEN') {
@@ -127,12 +127,12 @@ export class OffersService extends MongoDataService<Offer> {
     return offer;
   }
 
-  async find(query?: FindOfferQuery, refs: string[] = []): Promise<Offer[]> {
+  async find(query?: FindOfferQuery, refs: string[] = []): Promise<Array<Offer<ObjectId, ObjectId>>> {
     return this.MODEL.find(query)
       .populate(this.refsToProps(refs));
   }
 
-  async removeMany(query?: FindOfferQuery): Promise<Offer[]> {
+  async removeMany(query?: FindOfferQuery): Promise<Array<Offer<ObjectId, ObjectId>>>  {
     const offers = await this.MODEL.find(query);
     const cannotDelete = await this.tasksService.find({
       acceptedOffer: {

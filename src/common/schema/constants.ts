@@ -54,4 +54,6 @@ export const GENERAL_USER_SUMMARY_PROP =
 
 // TODO: Create interface TaskSummary
 export const TASK_SUMMARY_PROP =
-  'status creatorUser';
+  '_id startDateTime endDateTime creatorUser workerUser price title ' +
+  'acceptedOffer description seenBy location tags createdAt creatorRating ' +
+  'workerRating status type category paymentMethod imagesUrls';

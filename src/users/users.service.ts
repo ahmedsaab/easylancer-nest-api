@@ -1,9 +1,9 @@
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { UserCreateDto } from './dto/user.create.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { User } from './interfaces/user.interface';
-import { MyCreatedTask, Task } from '../tasks/interfaces/task.interface';
+import { MyAppliedTask, MyCreatedTask, Task, TaskDto } from '../tasks/interfaces/task.interface';
 import { TasksService } from '../tasks/tasks.service';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
@@ -15,8 +15,9 @@ import { TaskSearchDto } from '../tasks/dto/search/task.search.dto';
 import { Pagination } from '../common/interfaces/pagination.interface';
 import { MongoDataService } from '../common/providers/mongo-data.service';
 import { UserSchema, UserSchemaDefinition } from './schemas/user.schema';
-import { FilterQuery } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { OffersService } from '../offers/offers.service';
+import { OfferDto } from '../offers/interfaces/offer.interface';
 
 @Injectable()
 export class UsersService extends MongoDataService<User> {
@@ -168,20 +169,36 @@ export class UsersService extends MongoDataService<User> {
     }, popRefs);
   }
 
-  async findAppliedTasks(id, search: TaskSearchDto): Promise<Pagination<Task>> {
-    const tasks = await this.offersService.search(search.query ? {
-      workerUser: '',
-      status: '',
-    } : undefined, [ 'creatorUser'], {
-      skip: search.pageNo > 0 ? (search.pageNo * search.pageSize) : 0,
-      limit: search.pageSize,
+  async findAppliedTasks(
+    id: string,
+    search: TaskSearchDto,
+  ): Promise<Pagination<MyAppliedTask>> {
+    const match = this.tasksService.readSearchQuery({
+      workerUser: { type: 'eq', value: id },
     });
+    const matchPopulated = this.tasksService.readSearchQuery(
+      search.query, 'task',
+    );
+    const offersPagination = (
+      await this.offersService.search(match,
+        [ 'task' ],
+        search.pageSize,
+        search.pageNo,
+        matchPopulated,
+      )
+    ) as unknown as Pagination<OfferDto<TaskDto, ObjectId>>;
 
     return {
-      page: tasks,
-      pageNo: search.pageNo,
-      pageSize: search.pageSize,
-      total: 0,
+      ...offersPagination,
+      page: offersPagination.page.map(o => {
+        const { task, ...rest } = o;
+        const offer: OfferDto<ObjectId, ObjectId> =
+          {...rest} as OfferDto<ObjectId, ObjectId>;
+
+        offer.task = task._id;
+
+        return { ...task, offer  };
+      }),
     };
   }
 

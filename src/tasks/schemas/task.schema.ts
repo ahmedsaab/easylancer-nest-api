@@ -9,7 +9,7 @@ import { UsersCollectionName } from '../../users/schemas/user.schema';
 
 const { ObjectId } = mongoose.Schema.Types;
 
-export const TaskCollectionName = 'tasks';
+export const TasksCollectionName = 'tasks';
 
 export const TaskSchemaDefinition = {
   creatorUser: {
@@ -114,7 +114,7 @@ export const TaskSchemaDefinition = {
 export const TaskSchema = new mongoose.Schema(
   TaskSchemaDefinition, {
     versionKey: false,
-    collection: TaskCollectionName,
+    collection: TasksCollectionName,
   },
 );
 

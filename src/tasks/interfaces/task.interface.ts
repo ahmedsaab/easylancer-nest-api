@@ -1,6 +1,9 @@
 import { Document, Types } from 'mongoose';
 import { TaskRating } from './task-rating.interface';
 import { Location } from './location.interface';
+import { Offer, OfferDto } from '../../offers/interfaces/offer.interface';
+
+import { ObjectId } from 'mongodb';
 
 export interface Task extends Document {
   startDateTime: Date;
@@ -24,6 +27,14 @@ export interface Task extends Document {
   imagesUrls: string[];
 }
 
-export interface MyCreatedTask extends Omit<Task, keyof Document> {
+export interface TaskDto extends Omit<Task, keyof Document> {
+  _id: Types.ObjectId;
+}
+
+export interface MyCreatedTask extends TaskDto {
   offers?: number;
+}
+
+export interface MyAppliedTask extends TaskDto {
+  offer: OfferDto<ObjectId, ObjectId>;
 }

@@ -12,6 +12,7 @@ import { FindUserQuery } from './dto/query/find-user.query';
 import { SearchDto } from '../common/dto/search.dto';
 import { TaskSearchDto } from '../tasks/dto/search/task.search.dto';
 import { Pagination } from '../common/interfaces/pagination.interface';
+import { Offer } from '../offers/interfaces/offer.interface';
 
 @Controller('users')
 export class UsersController {
@@ -86,7 +87,7 @@ export class UsersController {
   async searchAppliedTasks(
     @Param('id') id: string,
     @Body() search: TaskSearchDto,
-  ): Promise<Pagination<Task>> {
+  ): Promise<Pagination<Offer>> {
     return this.usersService.findAppliedTasks(id, search);
   }
 

@@ -46,11 +46,12 @@ export class MongoDataService<T extends Document> {
     }
   }
 
-  readSearchQuery(query: Query = {}): FilterQuery<T> {
+  readSearchQuery(query: Query = {}, childOf?: string): FilterQuery<T> {
     const filter = {};
+    const prefix = childOf ? childOf + '.' : '';
 
     Object.entries(query).forEach(([key, value]) => {
-      filter[key] = this.readQuery(key, value);
+      filter[prefix + key] = this.readQuery(key, value);
     });
 
     return filter;
@@ -74,6 +75,7 @@ export class MongoDataService<T extends Document> {
     refs: string[] = [],
     pageSize: number = 100,
     pageNo: number = 0,
+    matchPopulated?: object,
   ): Promise<Pagination<T>> {
     const props = this.refsToProps(refs);
     const paths = {};
@@ -82,9 +84,8 @@ export class MongoDataService<T extends Document> {
       { $skip: pageNo * pageSize },
       { $limit: pageSize },
     ];
-    const countPipeLine = [
+    const countPipeLine: any[] = [
       { $match: match },
-      { $count: 'count' },
     ];
 
     props.forEach(prop => {
@@ -101,9 +102,24 @@ export class MongoDataService<T extends Document> {
           preserveNullAndEmptyArrays: true,
         },
       });
+      countPipeLine.push({
+        $lookup: {
+          from: this.SCHEMA_DEFINITION[prop.path].schema,
+          localField: prop.path,
+          foreignField: '_id',
+          as: prop.path,
+        },
+      });
     });
 
+    if (matchPopulated) {
+      dataPipeLine.push({ $match: matchPopulated });
+      countPipeLine.push({ $match: matchPopulated });
+    }
+
     Object.entries(this.SCHEMA.paths).forEach(([path, value]) => {
+      // This is because of missing options property
+      // in mongoose SchemaType type
       // @ts-ignore
       if (value.options.ref && refs.includes(path)) {
         this.POPULATION_PROPS[path].split(' ').forEach(field => {
@@ -115,6 +131,7 @@ export class MongoDataService<T extends Document> {
     });
 
     dataPipeLine.push({ $project: paths });
+    countPipeLine.push({ $count: 'count' });
 
     const search = (
       await this.MODEL.aggregate([
