@@ -1,8 +1,9 @@
 import { IsMongoId } from 'class-validator';
+import { ObjectId } from 'mongodb';
 
 export class TaskSeenByUserParams {
   @IsMongoId()
-  id: string;
+  id: ObjectId;
   @IsMongoId()
-  userId: string;
+  userId: ObjectId;
 }

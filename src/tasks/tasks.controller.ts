@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query, Headers, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { TaskCreateDto } from './dto/task.create.dto';
 import { TaskUpdateDto } from './dto/task.update.dto';
 import { TasksService } from './tasks.service';
-import { Task } from './interfaces/task.interface';
+import { Task, TaskDocument, TaskView, TaskWithCreator } from './interfaces/task.interface';
 import { IdOnlyParams } from '../common/dto/id.params';
 import { TaskSeenByUserParams } from './dto/params/task-seen-by-user.params';
-import { delay } from '../common/utils/dev-tools';
+// import { delay } from '../common/utils/dev-tools';
 
 @Controller('tasks')
 export class TasksController {
@@ -13,13 +13,13 @@ export class TasksController {
 
   // Only for development
   @Get('search')
-  async findAll(): Promise<Task[]> {
+  async findAll(): Promise<TaskWithCreator[]> {
     return this.tasksService.findAll();
   }
 
   // Only for development
   @Delete()
-  async removeAll(): Promise<void> {
+  async removeAll(): Promise<any> {
     return this.tasksService.removeAll();
   }
 
@@ -37,13 +37,6 @@ export class TasksController {
     return this.tasksService.get(params.id);
   }
 
-  @Get(':id/view')
-  async findOneView(
-    @Param() params: IdOnlyParams,
-  ): Promise<Task> {
-    return this.tasksService.getPopulate(params.id);
-  }
-
   @Put(':id')
   async update(
     @Param() params: IdOnlyParams,
@@ -59,10 +52,17 @@ export class TasksController {
     return this.tasksService.remove(params.id);
   }
 
+  @Get(':id/view')
+  async findOneView(
+    @Param() params: IdOnlyParams,
+  ): Promise<TaskView> {
+    return this.tasksService.getView(params.id);
+  }
+
   @Post(':id/seenBy/:userId')
   async seenByUser(
     @Param() params: TaskSeenByUserParams,
-  ): Promise<Partial<Task>> {
+  ): Promise<Partial<TaskDocument>> {
     return this.tasksService.seenByUser(params.id, params.userId);
   }
 }

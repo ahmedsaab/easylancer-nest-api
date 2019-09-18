@@ -1,6 +1,8 @@
-import { IsMongoId } from 'class-validator';
+import { IsDefined, IsMongoId } from 'class-validator';
+import { ObjectId } from 'mongodb';
 
 export class IdOnlyParams {
   @IsMongoId()
-  id: string;
+  @IsDefined()
+  id: ObjectId;
 }

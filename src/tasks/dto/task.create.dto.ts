@@ -4,7 +4,6 @@ import {
   IsDefined,
   IsIn,
   IsInt,
-  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
@@ -12,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ObjectId } from 'mongodb';
 import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_TYPES } from '../../common/schema/constants';
 import { LocationDto } from './location.dto';
 
@@ -30,7 +30,7 @@ export class TaskCreateDto {
 
   @IsDefined()
   @IsString()
-  readonly creatorUser: string;
+  readonly creatorUser: ObjectId;
 
   @IsDefined()
   @IsString()

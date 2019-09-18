@@ -1,10 +1,10 @@
 import { Controller, Get, Param, Delete, Query, Post, Body, Put } from '@nestjs/common';
 import { OffersService } from './offers.service';
-import { Offer } from './interfaces/offer.interface';
+import { Offer, OfferWithWorker } from './interfaces/offer.interface';
 import { IdOnlyParams } from '../common/dto/id.params';
 import { OfferCreateDto } from './dto/offer.create.dto';
 import { FindOfferQuery } from './dto/query/find-offer.query';
-import { delay } from '../common/utils/dev-tools';
+// import { delay } from '../common/utils/dev-tools';
 
 @Controller('offers')
 export class OffersController {
@@ -14,21 +14,13 @@ export class OffersController {
   async find(
     @Query() query: FindOfferQuery,
   ): Promise<Offer[]> {
-    return this.offersService.find(query);
-  }
-
-  @Get('/view')
-  async findPopulated(
-    @Query() query: FindOfferQuery,
-  ): Promise<Offer[]> {
-    // await delay(5000);
-    return this.offersService.find(query, ['workerUser']);
+    return this.offersService.find<Offer>(query);
   }
 
   @Delete()
   async removeAll(
     @Query() query: FindOfferQuery,
-  ): Promise<any> {
+  ): Promise<Offer[]> {
     return this.offersService.removeMany(query);
   }
 
@@ -49,8 +41,16 @@ export class OffersController {
 
   @Delete(':id')
   async remove(
-    @Param('id') id: string,
+    @Param() params: IdOnlyParams,
   ): Promise<Offer> {
-    return this.offersService.remove(id);
+    return this.offersService.remove(params.id);
+  }
+
+  @Get('/view')
+  async findView(
+    @Query() query: FindOfferQuery,
+  ): Promise<OfferWithWorker[]> {
+    // await delay(5000);
+    return this.offersService.find<OfferWithWorker>(query, ['workerUser']);
   }
 }

@@ -7,12 +7,13 @@ import {
   IsOptional,
   IsPositive, IsString,
 } from 'class-validator';
+import { ObjectId } from 'mongodb';
 import { PAYMENT_METHODS } from '../../common/schema/constants';
 
 export class OfferCreateDto {
   @IsMongoId()
   @IsDefined()
-  readonly workerUser: string;
+  readonly workerUser: ObjectId;
 
   @IsOptional()
   @IsIn(PAYMENT_METHODS.VALUES)
@@ -38,5 +39,5 @@ export class OfferCreateDto {
 
   @IsDefined()
   @IsMongoId()
-  task: string;
+  task: ObjectId;
 }

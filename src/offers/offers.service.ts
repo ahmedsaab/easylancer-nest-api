@@ -2,23 +2,22 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  NotFoundException,
   UnprocessableEntityException,
   ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Offer } from './interfaces/offer.interface';
+import { Model } from 'mongoose';
+import { AnyOffer, OfferDocument, Offer, OfferWithTask } from './interfaces/offer.interface';
 import { UsersService } from '../users/users.service';
 import { TasksService } from '../tasks/tasks.service';
 import { MongoError, ObjectId } from 'mongodb';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { GENERAL_USER_SUMMARY_PROP, TASK_SUMMARY_PROP, WORKER_USER_SUMMARY_PROP } from '../common/schema/constants';
 import { FindOfferQuery } from './dto/query/find-offer.query';
 import { OfferCreateDto } from './dto/offer.create.dto';
 import { OfferUpdateDto } from './dto/offer.update.dto';
 import { OfferSchema, OfferSchemaDefinition } from './schemas/offer.schema';
-import { TaskOffers } from './interfaces/task-offers.interface';
+import { WORKER_USER_SUMMARY_PROP, GENERAL_USER_SUMMARY_PROP } from '../users/interfaces/user.interface';
+import { Task, TaskOfferCount, TASK_SUMMARY_PROP } from '../tasks/interfaces/task.interface';
 
 const POPULATION_PROPS = {
   'workerUser': WORKER_USER_SUMMARY_PROP,
@@ -27,10 +26,10 @@ const POPULATION_PROPS = {
 };
 
 @Injectable()
-export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
+export class OffersService extends MongoDataService<OfferDocument, AnyOffer> {
   constructor(
     @InjectModel('Offer')
-    protected readonly MODEL: Model<Offer<ObjectId, ObjectId>>,
+    protected readonly MODEL: Model<OfferDocument>,
     @Inject(forwardRef(() => TasksService))
     private readonly tasksService: TasksService,
     @Inject(forwardRef(() => UsersService))
@@ -39,29 +38,9 @@ export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
     super(POPULATION_PROPS, OfferSchema, OfferSchemaDefinition, MODEL);
   }
 
-  async get(id: string): Promise<Offer<ObjectId, ObjectId>> {
-    const offer = await this.MODEL.findById(id);
-
-    if (!offer) {
-      throw new NotFoundException(`No offer found with id: ${id}`);
-    }
-    return offer;
-  }
-
-  async getPopulate(id: string, refs: string[]): Promise<Offer<ObjectId, ObjectId>> {
-    const offer = await this.MODEL.findById(id)
-      .populate(refs.length ? this.refsToProps(refs) : this.DEF_PROP);
-
-    if (!offer) {
-      throw new NotFoundException(`No offer found with id: ${id}`);
-    }
-
-    return offer;
-  }
-
-  async remove(id: string): Promise<any> {
+  async remove(id: ObjectId): Promise<Offer> {
     const [ offer, isAccepted ] = await Promise.all([
-      this.get(id),
+      this.get<Offer>(id),
       this.tasksService.find({ acceptedOffer: id })
         .then(task => task.length > 0),
     ]);
@@ -74,17 +53,17 @@ export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
 
     await this.MODEL.deleteOne({ _id: id });
     this.usersService.withdrawFromTask(
-      offer.workerUser.toHexString(),
-      offer.task.toHexString(),
+      offer.workerUser,
+      offer.task,
     );
 
     return offer;
   }
 
-  async create(data: OfferCreateDto): Promise<Offer<ObjectId, ObjectId>> {
+  async create(data: OfferCreateDto): Promise<Offer> {
     const offer = new this.MODEL(data);
     const [ task ] = await Promise.all([
-      this.tasksService.get(data.task),
+      this.tasksService.get<Task>(data.task),
       this.usersService.get(data.workerUser),
     ]);
 
@@ -107,14 +86,14 @@ export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
         }
         throw error;
       }
-      this.usersService.applyToTask(data.workerUser, task.id);
+      this.usersService.applyToTask(data.workerUser, task._id);
 
       return offer;
     }
   }
 
-  async update(id: string, data: OfferUpdateDto): Promise<Offer<ObjectId, ObjectId>> {
-    const offer = await this.getPopulate(id, ['task']) as any;
+  async update(id: ObjectId, data: OfferUpdateDto): Promise<Offer> {
+    const offer = await this.get<OfferWithTask>(id, ['task']);
 
     if (offer.task.status !== 'OPEN') {
       throw new ConflictException(
@@ -122,22 +101,14 @@ export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
       );
     }
 
-    offer.set(data);
-    await offer.save(data);
-
-    return offer;
+    return this.MODEL.findByIdAndUpdate(id, data);
   }
 
-  async find(query?: FindOfferQuery, refs: string[] = []): Promise<Array<Offer<ObjectId, ObjectId>>> {
-    return this.MODEL.find(query)
-      .populate(this.refsToProps(refs));
-  }
-
-  async removeMany(query?: FindOfferQuery): Promise<Array<Offer<ObjectId, ObjectId>>>  {
+  async removeMany(query?: FindOfferQuery): Promise<Offer[]>  {
     const offers = await this.MODEL.find(query);
     const cannotDelete = await this.tasksService.find({
       acceptedOffer: {
-        $in: offers.map(offer => offer.id),
+        $in: offers.map(offer => offer._id),
       },
     }).then(tasks => tasks.length > 0);
 
@@ -151,15 +122,15 @@ export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
 
     Promise.all(offers.map(offer => (
       this.usersService.withdrawFromTask(
-        offer.workerUser.toHexString(),
-        offer.task.toHexString(),
+        offer.workerUser,
+        offer.task,
       )
     ))).catch(error => console.error(error));
 
     return offers;
   }
 
-  async countForTasks(taskIds: ObjectId[]): Promise<TaskOffers[]> {
+  async countForTasks(taskIds: ObjectId[]): Promise<TaskOfferCount[]> {
     return (
       this.MODEL.aggregate([
         {
@@ -176,6 +147,6 @@ export class OffersService extends MongoDataService<Offer<ObjectId, ObjectId>> {
           },
         },
       ])
-    ) as unknown as Promise<TaskOffers[]>;
+    ) as unknown as Promise<TaskOfferCount[]>;
   }
 }

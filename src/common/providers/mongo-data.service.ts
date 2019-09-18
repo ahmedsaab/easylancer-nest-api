@@ -1,20 +1,26 @@
 import { Pagination } from '../interfaces/pagination.interface';
-import { Document, Model, Schema, Types } from 'mongoose';
+import { Document, Model, Schema, SchemaDefinition } from 'mongoose';
 import { FilterQuery, QuerySelector } from 'mongodb';
 
 import { ObjectId } from 'mongodb';
 import { Filter } from '../interfaces/filter.interface';
 import { Query } from '../interfaces/query.interface';
 import { SCHEMAS } from '../schema/schemas';
+import { NotFoundException } from '@nestjs/common';
 
-export class MongoDataService<T extends Document> {
+export class MongoDataService<T extends Document, I> {
   protected readonly DEF_PROP: any[];
   protected readonly MODEL: Model<T>;
   private readonly POPULATION_PROPS: any;
-  private readonly SCHEMA_DEFINITION: any;
-  private readonly SCHEMA: any;
+  private readonly SCHEMA_DEFINITION: SchemaDefinition;
+  private readonly SCHEMA: Schema;
 
-  constructor(populationProps, schema: Schema, schemaDefinition, model: Model<T>) {
+  constructor(
+    populationProps,
+    schema: Schema,
+    schemaDefinition: SchemaDefinition,
+    model: Model<T>,
+  ) {
     this.SCHEMA = schema;
     this.SCHEMA_DEFINITION = schemaDefinition;
     this.POPULATION_PROPS = populationProps;
@@ -26,6 +32,7 @@ export class MongoDataService<T extends Document> {
   }
 
   readQuery(property: string, filter: Filter): QuerySelector<string | number | ObjectId> {
+    // @ts-ignore
     const isObjectId = this.SCHEMA_DEFINITION[property].type.name === 'ObjectId';
 
     switch (filter.type) {
@@ -71,13 +78,42 @@ export class MongoDataService<T extends Document> {
     return props;
   }
 
-  async search(
+  async find<R extends I = I>(query, refs?: string[], options?: any | null): Promise<R[]> {
+    if (refs) {
+      return (
+        this.MODEL.find(query, null, options)
+          .populate(this.refsToProps(refs))
+      ) as unknown as Promise<R[]>;
+    } else {
+      return (
+        this.MODEL.find(query, null, options)
+      ) as unknown as Promise<R[]>;
+    }
+  }
+
+  async get<R extends I = I>(id: ObjectId, refs?: string[]): Promise<R> {
+    let promise = this.MODEL.findById(id);
+
+    if (refs) {
+      promise = promise.populate(this.refsToProps(refs));
+    }
+
+    const entity = await promise as unknown as Promise<R>;
+
+    if (!entity) {
+      throw new NotFoundException(`No entity found with id: ${id}`);
+    }
+
+    return entity;
+  }
+
+  async search<R extends I = I>(
     match: object,
     refs: string[] = [],
     pageSize: number = 100,
     pageNo: number = 0,
     matchPopulated?: object,
-  ): Promise<Pagination<T>> {
+  ): Promise<Pagination<R>> {
     const props = this.refsToProps(refs);
     const paths = {};
     const dataPipeLine: any[] = [
@@ -92,6 +128,7 @@ export class MongoDataService<T extends Document> {
     props.filter(prop => !prop.path.includes('.')).forEach(prop => {
       dataPipeLine.push({
         $lookup: {
+          // @ts-ignore
           from: SCHEMAS[this.SCHEMA_DEFINITION[prop.path].ref].name,
           localField: prop.path,
           foreignField: '_id',
@@ -105,6 +142,7 @@ export class MongoDataService<T extends Document> {
       });
       countPipeLine.push({
         $lookup: {
+          // @ts-ignore
           from: SCHEMAS[this.SCHEMA_DEFINITION[prop.path].ref].name,
           localField: prop.path,
           foreignField: '_id',
@@ -123,7 +161,11 @@ export class MongoDataService<T extends Document> {
 
       dataPipeLine.push({
         $lookup: {
-          from: SCHEMAS[SCHEMAS[this.SCHEMA_DEFINITION[path].ref].definition[subPath].ref].name,
+          from: SCHEMAS[
+            // @ts-ignore
+            SCHEMAS[this.SCHEMA_DEFINITION[path].ref]
+              .definition[subPath].ref
+            ].name,
           localField: prop.path,
           foreignField: '_id',
           as: prop.path,
@@ -136,13 +178,20 @@ export class MongoDataService<T extends Document> {
       });
     });
 
+    // @ts-ignore
     Object.entries(this.SCHEMA.paths).forEach(([path, value]) => {
-      // This is because of missing options property
-      // in mongoose SchemaType type
       // @ts-ignore
       if (value.options.ref && refs.includes(path)) {
         this.POPULATION_PROPS[path].split(' ').forEach(field => {
-          paths[path + '.' + field] = 1;
+          if (refs.includes(path + '.' + field)) {
+            this.POPULATION_PROPS[path + '.' + field].split(' ')
+              .forEach(subField => {
+                paths[path + '.' + field + '.' + subField] = 1;
+              },
+            );
+          } else {
+            paths[path + '.' + field] = 1;
+          }
         });
       } else {
         paths[path] = 1;
@@ -165,7 +214,7 @@ export class MongoDataService<T extends Document> {
       countResult: {
         count: string,
       },
-      dataResult: T[],
+      dataResult: R[],
     }];
 
     return {

@@ -1,34 +1,35 @@
 import {
   Inject,
   Injectable,
-  NotFoundException,
   forwardRef,
   ConflictException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Task } from './interfaces/task.interface';
+import { Model } from 'mongoose';
+import { ObjectId } from 'mongodb';
+import { Task, AnyTask, TaskDocument, TaskView, TaskWithCreator } from './interfaces/task.interface';
 import { UsersService } from '../users/users.service';
 import { OffersService } from '../offers/offers.service';
 import { TaskUpdateDto } from './dto/task.update.dto';
 import { MongoDataService } from '../common/providers/mongo-data.service';
-import { GENERAL_USER_SUMMARY_PROP, TASK_STATUSES } from '../common/schema/constants';
+import { TASK_STATUSES } from '../common/schema/constants';
 import { TaskCreateDto } from './dto/task.create.dto';
 import { DeferredActionsQueue } from '../common/utils/helpers';
 import { TaskSchema, TaskSchemaDefinition } from './schemas/task.schema';
+import { GENERAL_USER_SUMMARY_PROP } from '../users/interfaces/user.interface';
+import { Offer } from '../offers/interfaces/offer.interface';
 
-// const UPDATE_OPTIONS = { new: true, runValidators: true };
 const POPULATION_PROPS = {
   creatorUser: GENERAL_USER_SUMMARY_PROP,
   workerUser: GENERAL_USER_SUMMARY_PROP,
 };
 
 @Injectable()
-export class TasksService extends MongoDataService<Task> {
+export class TasksService extends MongoDataService<TaskDocument, AnyTask> {
   constructor(
     @InjectModel('Task')
-    protected readonly MODEL: Model<Task>,
+    protected readonly MODEL: Model<TaskDocument>,
     @Inject(forwardRef(() => OffersService))
     private readonly offersService: OffersService,
     @Inject(forwardRef(() => UsersService))
@@ -37,38 +38,25 @@ export class TasksService extends MongoDataService<Task> {
     super(POPULATION_PROPS, TaskSchema, TaskSchemaDefinition, MODEL);
   }
 
-  async findAll(): Promise<Task[]> {
-    return this.MODEL.find()
-      .populate(this.refsToProps(['creatorUser']));
+  // TODO: deprecate this function in favor of the inherited search
+  //  method from MongoDataService
+  async findAll(): Promise<TaskWithCreator[]> {
+    return this.find({}, ['creatorUser']);
   }
 
-  async removeAll(): Promise<any> {
-    return this.MODEL.deleteMany({});
+  // TODO: create a bulk-delete interface and return this type
+  async removeAll(): Promise<number> {
+    return this.MODEL.deleteMany({}).then(result =>
+      result.deletedCount,
+    );
   }
 
-  async getPopulate(id: string): Promise<Task> {
-    const task = await this.MODEL.findById(id)
-      .populate(this.DEF_PROP);
-
-    if (!task) {
-      throw new NotFoundException(`task with id ${id} not found`);
-    }
-
-    return task;
+  async getView(id: ObjectId): Promise<TaskView> {
+    return this.get(id, ['creatorUser', 'workerUser']);
   }
 
-  async get(id: string): Promise<Task> {
-    const task: Task = await this.MODEL.findById(id);
-
-    if (!task) {
-      throw new NotFoundException(`No task found with id ${id}`);
-    }
-
-    return task;
-  }
-
-  async remove(id: string): Promise<any> {
-    return this.MODEL.deleteOne({ _id: id });
+  async remove(id: ObjectId): Promise<Task> {
+    return this.MODEL.findOneAndRemove({ _id: id });
   }
 
   async create(data: TaskCreateDto): Promise<Task> {
@@ -82,23 +70,14 @@ export class TasksService extends MongoDataService<Task> {
   }
 
   async findByIds(ids): Promise<Task[]> {
-    const objectIds = ids.map(id => new Types.ObjectId(id));
+    const objectIds = ids.map(id => new ObjectId(id));
 
-    return this.MODEL.find({ _id: { $in: objectIds } });
-  }
-
-  async find(query, refs?: string[], options?: any | null): Promise<Task[]> {
-    if (refs) {
-      return this.MODEL.find(query, null, options)
-        .populate(this.refsToProps(refs));
-    } else {
-      return this.MODEL.find(query);
-    }
+    return this.find({ _id: { $in: objectIds } });
   }
 
   // TODO: Lock task before update, retry to gain lock X times on locked resource
-  async update(id: string, data: TaskUpdateDto): Promise<Task> {
-    const taskNew: Task = await this.get(id);
+  async update(id: ObjectId, data: TaskUpdateDto): Promise<Task> {
+    const taskNew = await this.get<TaskDocument>(id);
     const actionQueue = new DeferredActionsQueue();
     const taskOld = taskNew.toJSON();
 
@@ -170,7 +149,7 @@ export class TasksService extends MongoDataService<Task> {
       }
     }
     if (data.acceptedOffer) {
-      const offer = await this.offersService.get(data.acceptedOffer);
+      const offer = await this.offersService.get<Offer>(data.acceptedOffer);
 
       if (taskOld.acceptedOffer) {
         throw new ConflictException(
@@ -213,7 +192,7 @@ export class TasksService extends MongoDataService<Task> {
       if (TASK_STATUSES.FINISHED_VALUES.includes(taskNew.status)) {
         actionQueue.queue({
           method: this.usersService.finishTask.bind(this.usersService),
-          params: [taskNew.workerUser, taskNew.id],
+          params: [taskNew.workerUser, taskNew._id],
         });
         actionQueue.queue({
           method: this.usersService.addTags.bind(this.usersService),
@@ -222,7 +201,7 @@ export class TasksService extends MongoDataService<Task> {
       } else if (taskNew.status === 'ASSIGNED') {
         actionQueue.queue({
           method: this.usersService.assignTask.bind(this.usersService),
-          params: [taskNew.workerUser, taskNew.id],
+          params: [taskNew.workerUser, taskNew._id],
         });
       }
     }
@@ -233,14 +212,14 @@ export class TasksService extends MongoDataService<Task> {
     return taskNew;
   }
 
-  async seenByUser(id: string, userId: string): Promise<Partial<Task>> {
-    const user = await this.MODEL.findOneAndUpdate({ _id: id }, {
+  async seenByUser(id: ObjectId, userId: ObjectId): Promise<string[]> {
+    const task = await this.MODEL.findOneAndUpdate({ _id: id }, {
       $addToSet: {
         seenBy: userId,
       },
     }, { new: true });
 
-    return user.seenBy.map((objectId: Types.ObjectId) =>
+    return task.seenBy.map((objectId: ObjectId) =>
       objectId.toString(),
     );
   }

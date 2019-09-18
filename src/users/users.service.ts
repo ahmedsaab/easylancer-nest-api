@@ -1,15 +1,14 @@
-import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { UserCreateDto } from './dto/user.create.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from './interfaces/user.interface';
-import { MyAppliedTask, MyCreatedTask, Task, TaskDto } from '../tasks/interfaces/task.interface';
+import { UserDocument, User, AnyUser } from './interfaces/user.interface';
+import { MyAppliedTask, MyCreatedTask, TaskWithCreator, TaskWithWorker, Task } from '../tasks/interfaces/task.interface';
 import { TasksService } from '../tasks/tasks.service';
 import { TaskReview } from '../tasks/interfaces/task-review.interface';
 import { UserCreateBadgeDto } from './dto/user.create.badge.dto';
 import { Badge } from './interfaces/bade.interface';
 import { TASK_STATUSES } from '../common/schema/constants';
-import { FindUserQuery } from './dto/query/find-user.query';
 import { UserReview } from './interfaces/user-review.interface';
 import { TaskSearchDto } from '../tasks/dto/search/task.search.dto';
 import { Pagination } from '../common/interfaces/pagination.interface';
@@ -17,13 +16,14 @@ import { MongoDataService } from '../common/providers/mongo-data.service';
 import { UserSchema, UserSchemaDefinition } from './schemas/user.schema';
 import { ObjectId } from 'mongodb';
 import { OffersService } from '../offers/offers.service';
-import { OfferDto } from '../offers/interfaces/offer.interface';
+import { OfferWithTaskWithCreator } from '../offers/interfaces/offer.interface';
+import { UserUpdateDto } from './dto/user.update.dto';
 
 @Injectable()
-export class UsersService extends MongoDataService<User> {
+export class UsersService extends MongoDataService<UserDocument, AnyUser> {
   constructor(
     @InjectModel('User')
-    protected readonly MODEL: Model<User>,
+    protected readonly MODEL: Model<UserDocument>,
     @Inject(forwardRef(() => TasksService))
     private readonly tasksService: TasksService,
     @Inject(forwardRef(() => OffersService))
@@ -32,96 +32,21 @@ export class UsersService extends MongoDataService<User> {
     super({}, UserSchema, UserSchemaDefinition, MODEL);
   }
 
-  async find(query?: FindUserQuery): Promise<User[]> {
-    return this.MODEL.find(query);
-  }
-
   async removeAll(): Promise<any> {
     return this.MODEL.deleteMany({});
   }
 
-  async get(id: string): Promise<User> {
-    const user: User = await this.MODEL.findById(id);
-
-    if (!user) {
-      throw new NotFoundException(`No user found with id ${id}`);
-    }
-
-    return user;
-  }
-
-  async remove(id: string): Promise<any> {
-    return this.MODEL.deleteOne({ _id: id });
+  async remove(id: ObjectId): Promise<User> {
+    return this.MODEL.findOneAndRemove({ _id: id });
   }
 
   async create(dto: UserCreateDto): Promise<User> {
+    return this.MODEL.create(dto);
+  }
+
+  async addTags(id: ObjectId, tags: [string]): Promise<void> {
     try {
-      const user = new this.MODEL(dto);
-      return user.save();
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
-  }
-
-  applyToTask(id: string, taskId: string): void {
-    this.MODEL.findOneAndUpdate({ _id: id }, {
-      $addToSet: {
-        appliedTasks: taskId,
-      },
-    }).catch((error) => {
-      console.error(error);
-    });
-  }
-
-  withdrawFromTask(id: string, taskId: string): void {
-    this.MODEL.findOneAndUpdate({ _id: id }, {
-      $pull: {
-        appliedTasks: taskId,
-      },
-    }).catch((error) => {
-      console.error(error);
-    });
-  }
-
-  createTask(id: string, taskId: string): void {
-    this.MODEL.findOneAndUpdate({ _id: id }, {
-      $addToSet: {
-        createdTasks: taskId,
-      },
-    }).catch((error) => {
-      console.error(error);
-    });
-  }
-
-  assignTask(id: string, taskId: string): void {
-    this.MODEL.findOneAndUpdate({ _id: id }, {
-      $pull: {
-        appliedTasks: taskId,
-      },
-      $addToSet: {
-        acceptedTasks: taskId,
-      },
-    }).catch((error) => {
-      console.error(error);
-    });
-  }
-
-  finishTask(id: string, taskId: string): void {
-    this.MODEL.findOneAndUpdate({ _id: id }, {
-      $pull: {
-        acceptedTasks: taskId,
-      },
-      $addToSet: {
-        finishedTasks: taskId,
-      },
-    }).catch((error) => {
-      console.error(error);
-    });
-  }
-
-  async addTags(id: string, tags: [string]): Promise<void> {
-    try {
-      const user = await this.get(id);
+      const user = await this.get<UserDocument>(id);
 
       tags.forEach(tag => {
         const existentTagIndex = user.tags.findIndex(userTag =>
@@ -144,7 +69,7 @@ export class UsersService extends MongoDataService<User> {
     }
   }
 
-  async addReview(id: string, review: UserReview) {
+  async addReview(id: string, review: UserReview): Promise<void> {
     try {
       const key = review.like ? 'likes' : 'dislikes';
       const rating = review.like ? {
@@ -162,14 +87,7 @@ export class UsersService extends MongoDataService<User> {
     }
   }
 
-  async getFinishedTasks(id, popRefs = []): Promise<Task[]> {
-    return this.tasksService.find({
-      workerUser: id,
-      status: { $in: TASK_STATUSES.FINISHED_VALUES },
-    }, popRefs);
-  }
-
-  async findAppliedTasks(
+  async searchAppliedTasks(
     id: string,
     search: TaskSearchDto,
   ): Promise<Pagination<MyAppliedTask>> {
@@ -180,29 +98,30 @@ export class UsersService extends MongoDataService<User> {
       search.query, 'task',
     );
     const offersPagination = (
-      await this.offersService.search(match,
-        [ 'task' , 'task.creatorUser'],
-        search.pageSize,
-        search.pageNo,
+      await this.offersService.search<OfferWithTaskWithCreator>(
+        match, [ 'task' , 'task.creatorUser'],
+        search.pageSize, search.pageNo,
         matchPopulated,
       )
-    ) as unknown as Pagination<OfferDto<TaskDto, ObjectId>>;
+    );
 
     return {
       ...offersPagination,
-      page: offersPagination.page.map(o => {
-        const { task, ...rest } = o;
-        const offer: OfferDto<ObjectId, ObjectId> =
-          {...rest} as OfferDto<ObjectId, ObjectId>;
+      page: offersPagination.page.map(offerWithTask => {
+        const { task, ...offer } = offerWithTask;
 
-        offer.task = task._id;
-
-        return { ...task, offer  };
+        return {
+          ...task,
+          offer: {
+            ...offer,
+            task: task._id,
+          },
+        };
       }),
     };
   }
 
-  async getCreatedTasks(
+  async searchCreatedTasks(
     id: string,
     search: TaskSearchDto,
   ): Promise<Pagination<MyCreatedTask>> {
@@ -211,13 +130,13 @@ export class UsersService extends MongoDataService<User> {
         creatorUser: { type: 'eq', value: id },
       }),
     );
-    const tasksPagination = await this.tasksService.search(match,
-      [ 'workerUser' ],
-      search.pageSize,
-      search.pageNo,
+    const tasksPagination = await this.tasksService.search<TaskWithWorker>(
+      match, [ 'workerUser' ],
+      search.pageSize, search.pageNo,
     );
-    const taskOfferCount = await this.offersService
-      .countForTasks(tasksPagination.page.map(task => task._id));
+    const taskOfferCount = await this.offersService.countForTasks(
+      tasksPagination.page.map(task => task._id),
+    );
 
     return {
       ...tasksPagination,
@@ -230,22 +149,20 @@ export class UsersService extends MongoDataService<User> {
     };
   }
 
-  async setLastSeen(id: string, dateTime?: Date): Promise<Partial<User>> {
-    const doc = {
+  async setLastSeen(id: ObjectId, dateTime?: Date): Promise<User> {
+    const user = await this.MODEL.findByIdAndUpdate(id, {
       lastSeen: (dateTime || new Date()).toUTCString(),
-    };
-    const resp = await this.MODEL.updateOne({
-      _id: id,
-    }, doc);
+    });
 
-    if (resp.nModified !== 1) {
+    if (!user) {
       throw new NotFoundException(`No user found with id ${id}`);
     }
-    return doc;
+
+    return user;
   }
 
-  async addBadge(id: string, badge: UserCreateBadgeDto): Promise<Badge[]> {
-    const user = await this.MODEL.findOneAndUpdate({ _id: id }, {
+  async addBadge(id: ObjectId, badge: UserCreateBadgeDto): Promise<Badge[]> {
+    const user = await this.MODEL.findByIdAndUpdate(id, {
       $addToSet: {
         badges: badge,
       },
@@ -254,7 +171,7 @@ export class UsersService extends MongoDataService<User> {
     return user.badges;
   }
 
-  async removeBadge(id: string, badgeName: string): Promise<Badge> {
+  async removeBadge(id: ObjectId, badgeName: string): Promise<Badge> {
     const resp = await this.MODEL.updateOne({
       _id: id,
     }, {
@@ -271,7 +188,7 @@ export class UsersService extends MongoDataService<User> {
     };
   }
 
-  async getRelatedTasks(id): Promise<Task[]> {
+  async getRelatedTasks(id: ObjectId): Promise<Task[]> {
     const user = await this.get(id);
     const { acceptedTasks, appliedTasks, createdTasks, finishedTasks } = user;
 
@@ -281,8 +198,11 @@ export class UsersService extends MongoDataService<User> {
     return this.tasksService.findByIds(taskIds);
   }
 
-  async getReviews(id): Promise<TaskReview[]> {
-    const tasks = await this.getFinishedTasks(id, [ 'creatorUser']);
+  async getReviews(id: ObjectId): Promise<TaskReview[]> {
+    const tasks = await this.tasksService.find<TaskWithCreator>({
+      workerUser: id,
+      status: { $in: TASK_STATUSES.FINISHED_VALUES },
+    }, [ 'creatorUser']);
 
     return tasks.map((task) => ({
       creatorUser: task.creatorUser,
@@ -290,7 +210,63 @@ export class UsersService extends MongoDataService<User> {
     }));
   }
 
-  async update(id: string, data: Partial<User>): Promise<User> {
+  async update(id: ObjectId, data: UserUpdateDto): Promise<User> {
     return this.MODEL.findOneAndUpdate({ _id: id }, data, { new: true });
+  }
+
+  applyToTask(id: ObjectId, taskId: ObjectId): void {
+    this.MODEL.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
+        appliedTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  withdrawFromTask(id: ObjectId, taskId: ObjectId): void {
+    this.MODEL.findOneAndUpdate({ _id: id }, {
+      $pull: {
+        appliedTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  createTask(id: ObjectId, taskId: ObjectId): void {
+    this.MODEL.findOneAndUpdate({ _id: id }, {
+      $addToSet: {
+        createdTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  assignTask(id: ObjectId, taskId: ObjectId): void {
+    this.MODEL.findOneAndUpdate({ _id: id }, {
+      $pull: {
+        appliedTasks: taskId,
+      },
+      $addToSet: {
+        acceptedTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  finishTask(id: ObjectId, taskId: ObjectId): void {
+    this.MODEL.findOneAndUpdate({ _id: id }, {
+      $pull: {
+        acceptedTasks: taskId,
+      },
+      $addToSet: {
+        finishedTasks: taskId,
+      },
+    }).catch((error) => {
+      console.error(error);
+    });
   }
 }

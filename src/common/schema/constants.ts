@@ -43,17 +43,3 @@ export const USER_SETTINGS_ROLES = {
   VALUES: ['WORKER', 'OWNER'],
   DEFAULT: 'OWNER',
 };
-
-// TODO: Create interface UserSummary
-export const WORKER_USER_SUMMARY_PROP =
-  'firstName lastName likes dislikes ratings imageUrl badges tags isApproved';
-
-// TODO: Create interface UserSummary
-export const GENERAL_USER_SUMMARY_PROP =
-  'firstName lastName likes dislikes imageUrl badges isApproved';
-
-// TODO: Create interface TaskSummary
-export const TASK_SUMMARY_PROP =
-  '_id startDateTime endDateTime creatorUser workerUser price title ' +
-  'acceptedOffer description seenBy location tags createdAt creatorRating ' +
-  'workerRating status type category paymentMethod imagesUrls';
