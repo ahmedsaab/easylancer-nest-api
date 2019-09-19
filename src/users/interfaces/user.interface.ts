@@ -55,4 +55,4 @@ export type UserSummary = Pick<User,
 export type WorkerSummary = UserSummary &
   Pick<User, 'tags' | 'ratings'>;
 
-export type AnyUser = User;
+export type AnyUser = User | UserSummary | WorkerSummary;
