@@ -118,8 +118,6 @@ export class MongoDataService<T extends Document, I> {
     const paths = {};
     const dataPipeLine: any[] = [
       { $match: match },
-      { $skip: pageNo * pageSize },
-      { $limit: pageSize },
     ];
     const countPipeLine: any[] = [
       { $match: match },
@@ -155,6 +153,8 @@ export class MongoDataService<T extends Document, I> {
       dataPipeLine.push({ $match: matchPopulated });
       countPipeLine.push({ $match: matchPopulated });
     }
+
+    dataPipeLine.push({ $skip: pageNo * pageSize }, { $limit: pageSize });
 
     props.filter(prop => prop.path.includes('.')).forEach(prop => {
       const [path, subPath] = prop.path.split('.');

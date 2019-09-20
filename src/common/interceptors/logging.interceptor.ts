@@ -35,7 +35,13 @@ export class LoggingInterceptor implements NestInterceptor {
           //   resolved: data,
           //   time: getExecutionTime(startTime),
           // }));
-          console.log(request.number + ' ' + request.method + ' ' + response.statusCode + ' ' + requestJson.url);
+          console.log(
+            request.number + ' ' +
+            request.method + ' ' +
+            response.statusCode + ' ' +
+            requestJson.url + ' ' +
+            getExecutionTime(startTime),
+          );
         }),
         catchError((error: Error) => {
           // TODO: This is for prod
@@ -55,6 +61,7 @@ export class LoggingInterceptor implements NestInterceptor {
             request.method + ' ' +
             (error instanceof HttpException ? error.getStatus() : 500) + ' ' +
             requestJson.url + ' ' +
+            getExecutionTime(startTime) + ' ' +
             (error instanceof HttpException ? error.message.message : error.message) + ' ' +
             error.stack,
           );
@@ -65,6 +72,6 @@ export class LoggingInterceptor implements NestInterceptor {
   }
 }
 
-const getExecutionTime = (startTime: number): number => {
-  return Date.now() - startTime;
+const getExecutionTime = (startTime: number): string => {
+  return `${Date.now() - startTime}ms`;
 };

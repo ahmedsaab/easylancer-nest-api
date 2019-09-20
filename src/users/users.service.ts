@@ -189,7 +189,7 @@ export class UsersService extends MongoDataService<UserDocument, AnyUser> {
   }
 
   async getRelatedTasks(id: ObjectId): Promise<Task[]> {
-    const user = await this.get(id);
+    const user = await this.get<User>(id);
     const { acceptedTasks, appliedTasks, createdTasks, finishedTasks } = user;
 
     const taskIds =
