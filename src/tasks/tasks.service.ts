@@ -17,12 +17,12 @@ import { TASK_STATUSES } from '../common/schema/constants';
 import { TaskCreateDto } from './dto/task.create.dto';
 import { DeferredActionsQueue } from '../common/utils/helpers';
 import { TaskSchema, TaskSchemaDefinition } from './schemas/task.schema';
-import { GENERAL_USER_SUMMARY_PROP } from '../users/interfaces/user.interface';
+import { GENERAL_USER_SUMMARY_PROP, WORKER_USER_SUMMARY_PROP } from '../users/interfaces/user.interface';
 import { Offer } from '../offers/interfaces/offer.interface';
 
 const POPULATION_PROPS = {
   creatorUser: GENERAL_USER_SUMMARY_PROP,
-  workerUser: GENERAL_USER_SUMMARY_PROP,
+  workerUser: WORKER_USER_SUMMARY_PROP,
 };
 
 @Injectable()
@@ -132,13 +132,15 @@ export class TasksService extends MongoDataService<TaskDocument, AnyTask> {
           taskNew.status = 'DONE';
         } else if (creatorVote === false && workerVote === false) {
           taskNew.status = 'NOT_DONE';
+        }  else if (taskNew.creatorRating && !taskNew.workerRating) {
+          taskNew.status = 'PENDING_WORKER_REVIEW';
+        } else if (!taskNew.creatorRating && taskNew.workerRating) {
+          taskNew.status = 'PENDING_OWNER_REVIEW';
         } else if (
           taskNew.creatorRating && taskNew.workerRating &&
           creatorVote !== workerVote
         ) {
           taskNew.status = 'INVESTIGATE';
-        } else {
-          taskNew.status = 'PENDING_REVIEW';
         }
       }
     }
