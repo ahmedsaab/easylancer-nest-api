@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import { GeoSchema } from './geo.schema';
 
-export const LocationSchema = new mongoose.Schema({
+export const TaskLocationSchema = new mongoose.Schema({
   geo: {
     type: GeoSchema,
     required: true,

@@ -4,6 +4,9 @@ import { TagSchema } from './tag.schema';
 import { SettingSchema } from './setting.schema';
 import { UserRatingSchema } from './user-rating.schema';
 import { PhoneNumberUtil } from 'google-libphonenumber';
+import { LANGUAGES } from '../../common/schema/constants';
+import { UserLocationSchema } from './user-location.schema';
+import * as avatars from './avatars.json';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -79,7 +82,16 @@ export const UserSchemaDefinition = {
   },
   imageUrl: {
     type: String,
-    default: null,
+    default: () => avatars[Math.floor(Math.random() * avatars.length)].url,
+  },
+  imagesUrls: [String],
+  languages: {
+    type: [String],
+    enum: LANGUAGES.VALUES,
+  },
+  location: {
+    type: UserLocationSchema,
+    default: {},
   },
   dislikes: {
     type: Number,

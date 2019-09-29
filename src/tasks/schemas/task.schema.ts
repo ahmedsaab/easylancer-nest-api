@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { LocationSchema } from './location.schema';
+import { TaskLocationSchema } from './task-location.schema';
 import { TaskRatingSchema } from './task-rating.schema';
 import { BadRequestException } from '@nestjs/common';
 import { PAYMENT_METHODS, TASK_CATEGORIES, TASK_STATUSES, TASK_TYPES } from '../../common/schema/constants';
@@ -57,7 +57,7 @@ export const TaskSchemaDefinition = {
     default: [],
   },
   location: {
-    type: LocationSchema,
+    type: TaskLocationSchema,
     required: true,
   },
   startDateTime: {

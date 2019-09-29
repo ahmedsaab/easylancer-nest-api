@@ -5,7 +5,7 @@ interface Geo extends Document  {
   lng: number;
 }
 
-export interface Location extends Document {
+export interface TaskLocation extends Document {
   geo: Geo;
   country: string;
   city: string;

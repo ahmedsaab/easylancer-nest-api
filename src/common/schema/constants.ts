@@ -1,3 +1,5 @@
+import * as languages from './languages.json';
+
 export const PAYMENT_METHODS = {
   VALUES: ['card', 'cash'],
   DEFAULT: 'card',
@@ -44,4 +46,8 @@ export const TASK_CATEGORIES = {
 export const USER_SETTINGS_ROLES = {
   VALUES: ['WORKER', 'OWNER'],
   DEFAULT: 'OWNER',
+};
+
+export const LANGUAGES = {
+  VALUES: Object.keys(languages).map(key => key.toUpperCase()),
 };

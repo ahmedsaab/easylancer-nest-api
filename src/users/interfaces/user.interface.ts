@@ -3,6 +3,7 @@ import { Badge } from './bade.interface';
 import { UserRating } from './user-rating.interface';
 import { Setting } from './setting.interface';
 import { Tag } from './tag.interface';
+import { UserLocation } from './user-location.interface';
 
 const GENERAL_USER_SUMMARY_KEYS = [
   '_id', 'firstName', 'lastName', 'likes', 'dislikes',
@@ -31,6 +32,9 @@ export interface UserDocument extends Document {
   lastSeen: string;
   firstName: string;
   imageUrl: string;
+  imagesUrls: string[];
+  languages: string[];
+  location: UserLocation;
   password: string;
   dislikes: number;
   likes: number;

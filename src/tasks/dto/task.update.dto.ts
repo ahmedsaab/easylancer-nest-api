@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ObjectId } from 'mongodb';
-import { LocationDto } from './location.dto';
+import { TaskLocationDto } from './task-location.dto';
 import { PAYMENT_METHODS, TASK_STATUSES } from '../../common/schema/constants';
 import { TaskRatingDto } from './task-rating.dto';
 
@@ -50,8 +50,8 @@ export class TaskUpdateDto {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => LocationDto)
-  readonly location: LocationDto;
+  @Type(() => TaskLocationDto)
+  readonly location: TaskLocationDto;
 
   @IsOptional()
   @IsPositive()

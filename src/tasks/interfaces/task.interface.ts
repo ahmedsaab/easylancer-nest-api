@@ -1,6 +1,6 @@
 import { Document, Types } from 'mongoose';
 import { TaskRating } from './task-rating.interface';
-import { Location } from './location.interface';
+import { TaskLocation } from './task-location.interface';
 import { Offer } from '../../offers/interfaces/offer.interface';
 
 import { ObjectId } from 'mongodb';
@@ -26,7 +26,7 @@ export interface TaskDocument extends Document {
   title: string;
   description: string;
   seenBy: [Types.ObjectId];
-  location: Location;
+  location: TaskLocation;
   tags: [string];
   createdAt: Date;
   creatorRating: TaskRating;

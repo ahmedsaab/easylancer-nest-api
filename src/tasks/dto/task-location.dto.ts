@@ -2,7 +2,7 @@ import { IsDefined, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { GeoDto } from './geo.dto';
 
-export class LocationDto {
+export class TaskLocationDto {
   @IsDefined()
   @ValidateNested()
   @Type(() => GeoDto)

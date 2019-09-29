@@ -11,6 +11,7 @@ import { Badge } from './interfaces/bade.interface';
 import { FindUserQuery } from './dto/query/find-user.query';
 import { TaskSearchDto } from '../tasks/dto/search/task.search.dto';
 import { Pagination } from '../common/interfaces/pagination.interface';
+import * as avatars from './schemas/avatars.json';
 // import { delay } from '../common/utils/dev-tools';
 
 @Controller('users')
@@ -40,8 +41,17 @@ export class UsersController {
   @Get(':id')
   async findOne(
     @Param('id') id: ObjectId,
-  ): Promise<UserDocument> {
-    return this.usersService.get(id);
+  ): Promise<User> {
+    let user = await this.usersService.get<User>(id);
+
+    // TODO: remove this
+    if (!user.imageUrl) {
+      user = await this.usersService.update(user._id, {
+        imageUrl: avatars[Math.floor(Math.random() * avatars.length)].url,
+      });
+    }
+
+    return user;
   }
 
   @Put(':id')
@@ -91,7 +101,7 @@ export class UsersController {
   }
 
   @Post(':id/tasks/created')
-  async getCreatedTasks(
+  async searchCreatedTasks(
     @Param('id') id: string,
     @Body() search: TaskSearchDto,
   ): Promise<Pagination<MyCreatedTask>> {
