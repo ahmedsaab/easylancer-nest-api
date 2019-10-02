@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { BadgeSchema } from './badge.schema';
 import { TagSchema } from './tag.schema';
 import { SettingSchema } from './setting.schema';
-import { UserRatingSchema } from './user-rating.schema';
+import { UserRatingsSchema } from './user-ratings.schema';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import { LANGUAGES } from '../../common/schema/constants';
 import { UserLocationSchema } from './user-location.schema';
@@ -93,18 +93,6 @@ export const UserSchemaDefinition = {
     type: UserLocationSchema,
     default: {},
   },
-  dislikes: {
-    type: Number,
-    min: 0,
-    validate : Number.isInteger,
-    default: 0,
-  },
-  likes: {
-    type: Number,
-    min: 0,
-    validate : Number.isInteger,
-    default: 0,
-  },
   isApproved: {
     type: Boolean,
     default: false,
@@ -122,7 +110,7 @@ export const UserSchemaDefinition = {
   badges: [BadgeSchema],
   tags: [TagSchema],
   ratings: {
-    type: UserRatingSchema,
+    type: UserRatingsSchema,
     default: {},
   },
   settings: {

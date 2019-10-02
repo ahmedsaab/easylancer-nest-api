@@ -71,10 +71,10 @@ export class UsersService extends MongoDataService<UserDocument, AnyUser> {
 
   async addReview(id: string, review: UserReview): Promise<void> {
     try {
-      const key = review.like ? 'likes' : 'dislikes';
+      const key = `${review.profile}.${review.like ? 'likes' : 'dislikes'}`;
       const rating = review.like ? {
-        'ratings.count': 1,
-        'ratings.value': review.rating,
+        [`${review.profile}.ratings.count`] : 1,
+        [`${review.profile}.ratings.value`] : review.rating,
       } : {};
       await this.MODEL.findByIdAndUpdate(id, {
         $inc: {

@@ -1,19 +1,16 @@
 import { Document, Types } from 'mongoose';
 import { Badge } from './bade.interface';
-import { UserRating } from './user-rating.interface';
+import { UserRatings } from './user-ratings.interface';
 import { Setting } from './setting.interface';
 import { Tag } from './tag.interface';
 import { UserLocation } from './user-location.interface';
 
 const GENERAL_USER_SUMMARY_KEYS = [
-  '_id', 'firstName', 'lastName', 'likes', 'dislikes',
+  '_id', 'firstName', 'lastName', 'ratings',
   'imageUrl', 'badges', 'isApproved',
 ];
 
-const WORKER_USER_SUMMARY_KEYS = GENERAL_USER_SUMMARY_KEYS.concat([
-  'tags',
-  'ratings',
-]);
+const WORKER_USER_SUMMARY_KEYS = GENERAL_USER_SUMMARY_KEYS.concat(['tags']);
 
 export const GENERAL_USER_SUMMARY_PROP =
   GENERAL_USER_SUMMARY_KEYS.join(' ');
@@ -36,14 +33,12 @@ export interface UserDocument extends Document {
   languages: string[];
   location: UserLocation;
   password: string;
-  dislikes: number;
-  likes: number;
   isApproved: boolean;
   createdAt: Date;
   gender: string;
   badges: Badge[];
   tags: Tag[];
-  ratings: UserRating;
+  ratings: UserRatings;
   settings: Setting;
 }
 
@@ -51,12 +46,10 @@ export interface User extends Omit<UserDocument, keyof Document> {
   _id: Types.ObjectId;
 }
 
-export type UserSummary = Pick<User,
-  '_id' | 'firstName' | 'lastName' | 'likes' | 'dislikes' |
-  'imageUrl' | 'badges' | 'isApproved'
-  >;
+export type UserSummary = Pick<User, '_id' | 'firstName' | 'lastName' |
+  'ratings' | 'imageUrl' | 'badges' | 'isApproved'>;
 
 export type WorkerSummary = UserSummary &
-  Pick<User, 'tags' | 'ratings'>;
+  Pick<User, 'tags'>;
 
 export type AnyUser = User | UserSummary | WorkerSummary;

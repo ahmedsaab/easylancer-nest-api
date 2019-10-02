@@ -109,6 +109,7 @@ export class TasksService extends MongoDataService<TaskDocument, AnyTask> {
           actionQueue.queue({
             method: this.usersService.addReview.bind(this.usersService),
             params: [taskNew.workerUser, {
+              profile: 'worker',
               like: data.creatorRating.like,
               rating: data.creatorRating.rating,
             }],
@@ -119,6 +120,7 @@ export class TasksService extends MongoDataService<TaskDocument, AnyTask> {
           actionQueue.queue({
             method: this.usersService.addReview.bind(this.usersService),
             params: [taskNew.creatorUser, {
+              profile: 'creator',
               like: data.workerRating.like,
               rating: data.workerRating.rating,
             }],

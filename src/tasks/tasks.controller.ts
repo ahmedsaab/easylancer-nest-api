@@ -5,6 +5,8 @@ import { TasksService } from './tasks.service';
 import { Task, TaskDocument, TaskView, TaskWithCreator } from './interfaces/task.interface';
 import { IdOnlyParams } from '../common/dto/id.params';
 import { TaskSeenByUserParams } from './dto/params/task-seen-by-user.params';
+import { TaskSearchDto } from './dto/search/task.search.dto';
+import { Pagination } from '../common/interfaces/pagination.interface';
 // import { delay } from '../common/utils/dev-tools';
 
 @Controller('tasks')
@@ -15,6 +17,19 @@ export class TasksController {
   @Get('search')
   async findAll(): Promise<TaskWithCreator[]> {
     return this.tasksService.findAll();
+  }
+
+  // Only for development
+  @Post('search2')
+  async search(
+    @Body() search: TaskSearchDto,
+  ): Promise<Pagination<TaskView>> {
+    return this.tasksService.search<TaskView>(
+      this.tasksService.readSearchQuery(search.query),
+      [ 'workerUser', 'creatorUser' ],
+      search.pageSize,
+      search.pageNo,
+    );
   }
 
   // Only for development
