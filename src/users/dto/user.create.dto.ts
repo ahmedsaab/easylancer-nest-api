@@ -16,4 +16,8 @@ export class UserCreateDto {
   @IsString()
   @MaxLength(30)
   readonly lastName: string;
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  readonly imageUrl: string;
 }

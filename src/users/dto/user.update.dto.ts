@@ -62,8 +62,9 @@ export class UserUpdateDto {
   @IsString()
   readonly imageUrl?: string;
 
-  @IsOptional()
+  @ValidateIf(o => o.imagesUrls !== undefined)
   @IsArray()
+  @IsDefined()
   @IsString({each: true})
   readonly imagesUrls?: [string];
 
