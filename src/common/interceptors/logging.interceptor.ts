@@ -28,43 +28,45 @@ export class LoggingInterceptor implements NestInterceptor {
       .pipe(
         tap((data: object) => {
           // TODO: This is for prod
-          // console.log(JSON.stringify({
-          //   type: 'http',
-          //   number: request.number,
-          //   request: requestJson,
-          //   resolved: data,
-          //   time: getExecutionTime(startTime),
-          // }));
-          console.log(
-            request.number + ' ' +
-            request.method + ' ' +
-            response.statusCode + ' ' +
-            requestJson.url + ' ' +
-            getExecutionTime(startTime),
-          );
+          console.log(JSON.stringify({
+            type: 'http',
+            number: request.number,
+            request: requestJson,
+            resolved: data,
+            time: getExecutionTime(startTime),
+          }));
+          // TODO: This is for test
+          // console.log(
+          //   request.number + ' ' +
+          //   request.method + ' ' +
+          //   response.statusCode + ' ' +
+          //   requestJson.url + ' ' +
+          //   getExecutionTime(startTime),
+          // );
         }),
         catchError((error: Error) => {
           // TODO: This is for prod
-          // console.log(JSON.stringify({
-          //   type: 'http',
-          //   number: request.number,
-          //   request: requestJson,
-          //   rejected: {
-          //     code: error instanceof HttpException ? error.getStatus() : 500,
-          //     message: error.message,
-          //     stack: error.stack,
-          //   },
-          //   time: getExecutionTime(startTime),
-          // }));
-          console.error(
-            request.number + ' ' +
-            request.method + ' ' +
-            (error instanceof HttpException ? error.getStatus() : 500) + ' ' +
-            requestJson.url + ' ' +
-            getExecutionTime(startTime) + ' ' +
-            (error instanceof HttpException ? error.message.message : error.message) + ' ' +
-            error.stack,
-          );
+          console.log(JSON.stringify({
+            type: 'http',
+            number: request.number,
+            request: requestJson,
+            rejected: {
+              code: error instanceof HttpException ? error.getStatus() : 500,
+              message: error.message,
+              stack: error.stack,
+            },
+            time: getExecutionTime(startTime),
+          }));
+          // TODO: This is for test
+          // console.error(
+          //   request.number + ' ' +
+          //   request.method + ' ' +
+          //   (error instanceof HttpException ? error.getStatus() : 500) + ' ' +
+          //   requestJson.url + ' ' +
+          //   getExecutionTime(startTime) + ' ' +
+          //   (error instanceof HttpException ? error.message.message : error.message) + ' ' +
+          //   error.stack,
+          // );
 
           throw error;
         }),
