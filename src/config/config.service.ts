@@ -20,14 +20,10 @@ export class ConfigService {
    */
   private validateInput(envConfig: EnvConfig): EnvConfig {
     const envVarsSchema: Joi.ObjectSchema = Joi.object({
-      NODE_ENV: Joi.string()
-        .valid(['development', 'production', 'test', 'provision'])
-        .default('development'),
       PORT: Joi.number().default(3000),
-      API_AUTH_ENABLED: Joi.boolean().required(),
       DB_URI: Joi.string().required(),
       DEBUG: Joi.boolean().default(false),
-      REQUEST_TIMEOUT: Joi.number().default(3000),
+      REQUEST_TIMEOUT: Joi.number().default(5000),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -38,10 +34,6 @@ export class ConfigService {
       throw new Error(`Config validation error: ${error.message}`);
     }
     return validatedEnvConfig;
-  }
-
-  get isApiAuthEnabled(): boolean {
-    return Boolean(this.envConfig.API_AUTH_ENABLED);
   }
 
   get dbUri(): string {
